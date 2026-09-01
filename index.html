@@ -1,0 +1,3164 @@
+<!DOCTYPE html>
+<!-- saved from url=(0056)file:///Users/mac/Downloads/crypto-portfolio-app_23.html -->
+<html lang="ro"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Portofoliu Crypto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000000;
+    --surface:#111111;
+    --surface2:#181818;
+    --border:#272727;
+    --text:#E8E6DF;
+    --text2:#9A9A9A;
+    --text3:#666666;
+    --gold:#C9A227;
+    --gold-dim:#8F7A2E;
+    --pos:#4FAE7C;
+    --neg:#D1584A;
+    --watch:#8A8A8A;
+    --reject:#666666;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+  ::selection{background:var(--gold);color:#0B0E13;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+  a{color:var(--gold);}
+  button{font-family:'Inter',sans-serif;cursor:pointer;}
+  input,select{font-family:'Inter',sans-serif;}
+
+  #app{display:flex;min-height:100vh;}
+
+  /* SIDEBAR */
+  #sidebar{
+    width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;padding:22px 14px;position:sticky;top:0;height:100vh;
+  }
+  .brand{padding:0 10px 22px 10px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+  .brand-mark{font-family:'Inter',sans-serif;font-weight:700;font-size:19px;letter-spacing:-0.02em;color:var(--text);}
+  .brand-mark span{color:var(--gold);}
+  .brand-sub{font-size:11px;color:var(--text3);margin-top:3px;letter-spacing:.04em;text-transform:uppercase;}
+
+  .navgroup-label{font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:14px 10px 6px 10px;}
+  .navbtn{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;
+    color:var(--text2);padding:9px 10px;border-radius:7px;font-size:14px;font-weight:500;margin-bottom:2px;
+    transition:background .15s, color .15s;
+  }
+  .navbtn:hover{background:var(--surface2);color:var(--text);}
+  .navbtn.active{background:var(--surface2);color:var(--gold);}
+  .navbtn .dot{display:none;}
+
+  #sidebar-foot{margin-top:auto;padding:10px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:14px;}
+  #refresh-status{margin-top:6px;}
+
+  /* MAIN */
+  #main{flex:1;padding:30px 38px 60px 38px;max-width:1180px;}
+  .page{display:none;}
+  .page.active{display:block;}
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+  .page-title{font-size:23px;font-weight:600;letter-spacing:-0.01em;}
+  .page-sub{font-size:13px;color:var(--text2);margin-top:4px;}
+
+  .btn{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;
+    border-radius:7px;font-size:13px;font-weight:500;transition:border-color .15s, background .15s;
+  }
+  .btn:hover{border-color:var(--gold-dim);}
+  .btn-gold{background:var(--gold);border-color:var(--gold);color:#0B0E13;font-weight:600;}
+  .btn-gold:hover{background:#DCB330;}
+  .btn-danger{color:var(--neg);}
+  .btn-danger:hover{border-color:var(--neg);}
+  .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+
+  .cards-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+  .card-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .card-value{font-family:'JetBrains Mono';font-size:18px;font-weight:600;letter-spacing:-0.01em;line-height:1.3;word-break:break-word;}
+  .card-delta{font-size:12.5px;margin-top:5px;font-family:'JetBrains Mono';}
+  .pos{color:var(--pos);} .neg{color:var(--neg);}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-bottom:20px;}
+  .panel-title{font-size:14.5px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:0 10px 10px 10px;border-bottom:1px solid var(--border);}
+  td{padding:10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right;font-family:'JetBrains Mono';}
+
+  .verdict{
+    display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;transform:rotate(-1.5deg);border:1.5px solid currentColor;
+  }
+  .verdict.ACCEPT{color:var(--pos);}
+  .verdict.WATCH{color:var(--watch);}
+  .verdict.REJECT{color:var(--text3);}
+  .verdict.CASH{color:var(--gold);}
+
+  .tok{display:flex;align-items:center;gap:9px;}
+  .tok-ticker{font-weight:600;font-family:'JetBrains Mono';font-size:13.5px;}
+
+  .tabs-sub{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);}
+  .tab-sub-btn{background:none;border:none;color:var(--text3);padding:8px 4px;margin-right:14px;font-size:13.5px;font-weight:500;border-bottom:2px solid transparent;}
+  .tab-sub-btn.active{color:var(--text);border-bottom-color:var(--gold);}
+
+  .empty-state{text-align:center;padding:50px 20px;color:var(--text3);}
+  .empty-state .display{color:var(--text2);font-size:16px;margin-bottom:6px;}
+
+  input.field, select.field{
+    background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;
+    padding:8px 10px;font-size:13.5px;width:100%;
+  }
+  select.field{
+    padding-right:30px;-webkit-appearance:none;-moz-appearance:none;appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238A8F98' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center;
+  }
+  input.field:focus, select.field:focus{outline:none;border-color:var(--gold-dim);}
+  label.flabel{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:14px;}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,7,10,.6);z-index:50;align-items:center;justify-content:center;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:420px;max-width:92vw;max-height:88vh;overflow-y:auto;}
+  .modal h3{margin:0 0 16px 0;font-size:16px;}
+  .search-results{max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:7px;margin-top:8px;}
+  .sr-item{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;cursor:pointer;}
+  .sr-item:hover{background:var(--surface2);}
+  .sr-item:last-child{border-bottom:none;}
+  .badge{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--text3);}
+
+  .toast{position:fixed;bottom:22px;right:22px;background:var(--surface2);border:1px solid var(--border);
+    color:var(--text);padding:12px 16px;border-radius:8px;font-size:13px;z-index:99;max-width:340px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  .toast.warn{border-color:var(--neg);}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+  @media(max-width:820px){
+    #sidebar{position:fixed;left:-220px;transition:left .2s;z-index:40;}
+    #sidebar.open{left:0;}
+    #main{padding:20px 16px 50px 16px;}
+    #hamb{display:block!important;}
+  }
+  #hamb{display:none;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 10px;margin-bottom:14px;color:var(--text);}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">Crypto Stats</div>
+    </div>
+    <button class="navbtn active" data-page="real"><span class="dot"></span>My portfolio</button>
+    <button class="navbtn" data-page="tx"><span class="dot"></span>Transactions</button>
+    <div class="navgroup-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>Portfolios</span>
+      <button onclick="createPortfolio()" title="New portfolio" style="background:none;border:none;color:var(--gold);font-size:15px;font-weight:700;cursor:pointer;padding:0;line-height:1;">+</button>
+    </div>
+    <div id="navPortfolios"><button class="navbtn" data-page="p1"><span class="dot"></span>Safe</button><button class="navbtn" data-page="p2"><span class="dot"></span>Medium Risk</button><button class="navbtn" data-page="p3"><span class="dot"></span>High Risk - High Reward</button></div>
+    <div class="navgroup-label">Research</div>
+    <button class="navbtn" data-page="markets"><span class="dot"></span>Markets</button>
+    <button class="navbtn" data-page="watchlist"><span class="dot"></span>Watchlist</button>
+    <button class="navbtn" data-page="risk"><span class="dot"></span>Risk / Analytics</button>
+    <div id="sidebar-foot">
+    </div>
+  </div>
+
+  <div id="main">
+    <button id="hamb" onclick="document.getElementById(&#39;sidebar&#39;).classList.toggle(&#39;open&#39;)">☰ Menu</button>
+
+    <!-- REAL PORTFOLIO -->
+    <div class="page active" id="page-real">
+      <div class="page-head">
+        <div>
+          <div class="page-title">My portfolio</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-gold" onclick="openTxModal()">+ Add transaction</button>
+        </div>
+      </div>
+      <div class="cards-row" id="realCards"></div>
+      <div class="panel">
+        <table>
+          <thead><tr>
+            <th id="rthToken" style="cursor:pointer;" onclick="setRealSort('ticker')">Token</th>
+            <th id="rthQty" class="num" style="cursor:pointer;" onclick="setRealSort('qty')">Quantity</th>
+            <th id="rthAvg" class="num" style="cursor:pointer;" onclick="setRealSort('avgCost')">Avg cost</th>
+            <th id="rthPrice" class="num" style="cursor:pointer;" onclick="setRealSort('price')">Current price</th>
+            <th id="rthValue" class="num" style="cursor:pointer;" onclick="setRealSort('value')">Value</th>
+            <th id="rthPnl" class="num" style="cursor:pointer;" onclick="setRealSort('pnl')">Unrealised P&amp;L</th><th></th>
+          </tr></thead>
+          <tbody id="realTable"><tr>
+      <td><div class="tok"><span class="tok-ticker">ETH</span></div></td>
+      <td class="num">1,63872</td>
+      <td class="num">$2,524.40</td>
+      <td class="num" style="">
+        <span style="cursor:pointer;" onclick="promptManualPrice(&#39;ETH&#39;)" title="Click to edit the manual price">$1,873.44</span>
+      </td>
+      <td class="num">$3,070.04</td>
+      <td class="num neg">-$1,066.74 <span style="opacity:.7;">(-25.79%)</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm" onclick="filterTxByTicker(&#39;ETH&#39;)">transactions</button>
+      </td>
+    </tr><tr>
+      <td><div class="tok"><span class="tok-ticker">BTC</span></div></td>
+      <td class="num">0,03277</td>
+      <td class="num">$76,643.84</td>
+      <td class="num" style="">
+        <span style="cursor:pointer;" onclick="promptManualPrice(&#39;BTC&#39;)" title="Click to edit the manual price">$62,715.00</span>
+      </td>
+      <td class="num">$2,055.17</td>
+      <td class="num neg">-$456.45 <span style="opacity:.7;">(-18.17%)</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm" onclick="filterTxByTicker(&#39;BTC&#39;)">transactions</button>
+      </td>
+    </tr><tr>
+      <td><div class="tok"><span class="tok-ticker">HYPE</span></div></td>
+      <td class="num">7,34</td>
+      <td class="num">$44.82</td>
+      <td class="num" style="">
+        <span style="cursor:pointer;" onclick="promptManualPrice(&#39;HYPE&#39;)" title="Click to edit the manual price">$56.06</span>
+      </td>
+      <td class="num">$411.48</td>
+      <td class="num pos">$82.50 <span style="opacity:.7;">(+25.08%)</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm" onclick="filterTxByTicker(&#39;HYPE&#39;)">transactions</button>
+      </td>
+    </tr><tr>
+      <td><div class="tok"><span class="tok-ticker">ENA</span></div></td>
+      <td class="num">777</td>
+      <td class="num">$0.4343</td>
+      <td class="num" style="">
+        <span style="cursor:pointer;" onclick="promptManualPrice(&#39;ENA&#39;)" title="Click to edit the manual price">$0.0836</span>
+      </td>
+      <td class="num">$64.99</td>
+      <td class="num neg">-$272.46 <span style="opacity:.7;">(-80.74%)</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm" onclick="filterTxByTicker(&#39;ENA&#39;)">transactions</button>
+      </td>
+    </tr><tr>
+      <td><div class="tok"><span class="tok-ticker">SUI</span></div></td>
+      <td class="num">91,7</td>
+      <td class="num">$2.53</td>
+      <td class="num" style="">
+        <span style="cursor:pointer;" onclick="promptManualPrice(&#39;SUI&#39;)" title="Click to edit the manual price">$0.6754</span>
+      </td>
+      <td class="num">$61.93</td>
+      <td class="num neg">-$170.07 <span style="opacity:.7;">(-73.31%)</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm" onclick="filterTxByTicker(&#39;SUI&#39;)">transactions</button>
+      </td>
+    </tr><tr>
+      <td><div class="tok"><span class="tok-ticker">ARB</span></div></td>
+      <td class="num">487,7</td>
+      <td class="num">$0.6216</td>
+      <td class="num" style="">
+        <span style="cursor:pointer;" onclick="promptManualPrice(&#39;ARB&#39;)" title="Click to edit the manual price">$0.0743</span>
+      </td>
+      <td class="num">$36.23</td>
+      <td class="num neg">-$266.94 <span style="opacity:.7;">(-88.05%)</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm" onclick="filterTxByTicker(&#39;ARB&#39;)">transactions</button>
+      </td>
+    </tr><tr>
+      <td><div class="tok"><span class="tok-ticker">AUKI</span></div></td>
+      <td class="num">2.000</td>
+      <td class="num">$0.034</td>
+      <td class="num" style="">
+        <span style="cursor:pointer;" onclick="promptManualPrice(&#39;AUKI&#39;)" title="Click to edit the manual price">$0.0045</span>
+      </td>
+      <td class="num">$8.9872</td>
+      <td class="num neg">-$59.01 <span style="opacity:.7;">(-86.78%)</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm" onclick="filterTxByTicker(&#39;AUKI&#39;)">transactions</button>
+      </td>
+    </tr></tbody>
+        </table>
+        <div class="empty-state" id="realEmpty" style="display:none;">
+          <div class="display">No holdings yet</div>
+          <div>Add your first transaction to populate your portfolio.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;">
+        <div class="panel" style="flex:1;min-width:340px;">
+          <div class="panel-title">Allocation</div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+            <div style="width:180px;height:180px;flex-shrink:0;"><div id="allocChart" style="width:100%;height:100%;"></div></div>
+            <div style="flex:1;min-width:180px;" id="allocLegend"></div>
+          </div>
+        </div>
+        <div class="panel" style="flex:1;min-width:340px;">
+          <div class="panel-title">Sector breakdown</div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+            <div style="width:180px;height:180px;flex-shrink:0;"><div id="sectorChart" style="width:100%;height:100%;"></div></div>
+            <div style="flex:1;min-width:180px;" id="sectorLegend"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;">
+        <div class="panel" style="flex:1;min-width:340px;">
+          <div class="panel-title">P&amp;L by token</div>
+          <div id="pnlChart"></div>
+        </div>
+        <div class="panel" style="flex:1;min-width:340px;">
+          <div class="panel-title">Portfolio value over time</div>
+          <div id="evoChart" style="width:100%;height:120px;"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Rebalancing — actual vs target</span>
+          <select class="field" id="rebalanceTarget" style="width:auto;" onchange="renderRebalance()">
+            <option value="p1">Safe</option>
+            <option value="p2">Medium Risk</option>
+            <option value="p3">High Risk - High Reward</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr>
+            <th id="rbthToken" style="cursor:pointer;" onclick="setRebalanceSort('ticker')">Token</th>
+            <th id="rbthTarget" class="num" style="cursor:pointer;" onclick="setRebalanceSort('targetPct')">Target %</th>
+            <th id="rbthActual" class="num" style="cursor:pointer;" onclick="setRebalanceSort('actualPct')">Actual %</th>
+            <th id="rbthDelta" class="num" style="cursor:pointer;" onclick="setRebalanceSort('deltaPct')">Delta %</th>
+            <th id="rbthDeltaUsd" class="num" style="cursor:pointer;" onclick="setRebalanceSort('deltaUsd')">Delta (buy/sell)</th>
+          </tr></thead>
+          <tbody id="rebalanceTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="page" id="page-tx">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Transactions</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="document.getElementById(&#39;csvImportInput&#39;).click()">↑ Import CSV</button>
+          <input type="file" id="csvImportInput" accept=".csv" style="display:none;" onchange="handleCsvImport(this.files[0])">
+          <button class="btn" onclick="exportCsv()">↓ Export CSV</button>
+          <button class="btn btn-gold" onclick="openTxModal()">+ Add transaction</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+          <input class="field" id="txFilterTicker" placeholder="Filter by ticker..." style="width:160px;" oninput="handleTxFilterInput(this.value)">
+          <select class="field" id="txFilterType" style="width:auto;min-width:150px;" onchange="setTxFilterType(this.value)">
+            <option value="all">All types</option>
+            <option value="buy">Buy only</option>
+            <option value="sell">Sell only</option>
+          </select>
+          <button class="btn btn-sm" onclick="clearTxFilter()">Clear filters</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th id="thDate" style="cursor:pointer;" onclick="setTxSort('date')">Date</th>
+            <th id="thTicker" style="cursor:pointer;" onclick="setTxSort('ticker')">Token</th>
+            <th id="thType" style="cursor:pointer;" onclick="setTxSort('type')">Type</th>
+            <th id="thQty" class="num" style="cursor:pointer;" onclick="setTxSort('qty')">Quantity</th>
+            <th id="thPrice" class="num" style="cursor:pointer;" onclick="setTxSort('price')">Price (USD)</th>
+            <th id="thTotal" class="num" style="cursor:pointer;" onclick="setTxSort('total')">Total (USD)</th>
+            <th>Source</th><th></th>
+          </tr></thead>
+          <tbody id="txTable">
+    <tr>
+      <td class="mono">2026-08-14</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.07192</td>
+      <td class="num">$1,880.00</td>
+      <td class="num">$135.21</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-20&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2026-02-05</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.5522</td>
+      <td class="num">$2,130.00</td>
+      <td class="num">$1,176.19</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-19&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-12-09</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00128</td>
+      <td class="num">$90,350.00</td>
+      <td class="num">$115.65</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-12&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-12-09</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.038</td>
+      <td class="num">$3,100.00</td>
+      <td class="num">$117.80</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-18&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-11-18</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00126</td>
+      <td class="num">$91,200.00</td>
+      <td class="num">$114.91</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-11&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-11-18</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0386</td>
+      <td class="num">$3,050.00</td>
+      <td class="num">$117.73</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-17&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-10-11</td>
+      <td class="tok-ticker">ENA</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">138</td>
+      <td class="num">$0.44</td>
+      <td class="num">$60.72</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-ena-01&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-10-11</td>
+      <td class="tok-ticker">ENA</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">246</td>
+      <td class="num">$0.43</td>
+      <td class="num">$105.78</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-ena-02&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-10-11</td>
+      <td class="tok-ticker">ENA</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">393</td>
+      <td class="num">$0.435</td>
+      <td class="num">$170.96</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-ena-03&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-10-06</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00094</td>
+      <td class="num">$124,000.00</td>
+      <td class="num">$116.56</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-10&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-10-06</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0258</td>
+      <td class="num">$4,550.00</td>
+      <td class="num">$117.39</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-16&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-09-24</td>
+      <td class="tok-ticker">AUKI</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">2000</td>
+      <td class="num">$0.034</td>
+      <td class="num">$68.00</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-auki-01&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-09-23</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--neg);text-transform:uppercase;font-size:12px;font-weight:600;">sell</span></td>
+      <td class="num">0.1284</td>
+      <td class="num">$4,150.00</td>
+      <td class="num">$532.86</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-15&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-09-23</td>
+      <td class="tok-ticker">HYPE</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">7.34</td>
+      <td class="num">$44.82</td>
+      <td class="num">$328.98</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-hype-01&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-09-08</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00104</td>
+      <td class="num">$112,000.00</td>
+      <td class="num">$116.48</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-09&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-09-08</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.027</td>
+      <td class="num">$4,350.00</td>
+      <td class="num">$117.45</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-14&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-08-04</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00101</td>
+      <td class="num">$114,350.00</td>
+      <td class="num">$115.49</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-08&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-08-04</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0324</td>
+      <td class="num">$3,550.00</td>
+      <td class="num">$115.02</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-13&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-07-07</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00107</td>
+      <td class="num">$112,000.00</td>
+      <td class="num">$119.84</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-07&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-07-07</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.046</td>
+      <td class="num">$2,550.00</td>
+      <td class="num">$117.30</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-12&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-06-22</td>
+      <td class="tok-ticker">SUI</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">91.7</td>
+      <td class="num">$2.53</td>
+      <td class="num">$232.00</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-sui-01&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-06-06</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00108</td>
+      <td class="num">$104,100.00</td>
+      <td class="num">$112.43</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-06&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-06-06</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.046</td>
+      <td class="num">$2,500.00</td>
+      <td class="num">$115.00</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-11&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-06-05</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.01909</td>
+      <td class="num">$61,150.00</td>
+      <td class="num">$1,167.35</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-13&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-05-08</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00113</td>
+      <td class="num">$99,500.00</td>
+      <td class="num">$112.43</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-05&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-05-08</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0588</td>
+      <td class="num">$1,950.00</td>
+      <td class="num">$114.66</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-10&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-04-09</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00143</td>
+      <td class="num">$76,250.00</td>
+      <td class="num">$109.04</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-04&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-04-09</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0756</td>
+      <td class="num">$1,450.00</td>
+      <td class="num">$109.62</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-09&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-03-12</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0574</td>
+      <td class="num">$1,900.00</td>
+      <td class="num">$109.06</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-07&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-03-12</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0576</td>
+      <td class="num">$1,900.00</td>
+      <td class="num">$109.44</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-08&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-03-06</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00118</td>
+      <td class="num">$91,150.00</td>
+      <td class="num">$107.56</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-03&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-03-06</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0473</td>
+      <td class="num">$2,300.00</td>
+      <td class="num">$108.79</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-06&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-02-27</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00121</td>
+      <td class="num">$86,400.00</td>
+      <td class="num">$104.54</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-02&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-02-27</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0445</td>
+      <td class="num">$2,350.00</td>
+      <td class="num">$104.57</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-05&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-02-03</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.1973</td>
+      <td class="num">$2,600.00</td>
+      <td class="num">$512.98</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-04&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-02-03</td>
+      <td class="tok-ticker">ARB</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">235.1</td>
+      <td class="num">$0.43</td>
+      <td class="num">$101.09</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-arb-02&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-01-18</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0196</td>
+      <td class="num">$3,300.00</td>
+      <td class="num">$64.68</td>
+      <td style="color:var(--text3);font-size:12.5px;">BITS</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-03&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-01-17</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.3005</td>
+      <td class="num">$3,400.00</td>
+      <td class="num">$1,021.70</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-02&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-01-17</td>
+      <td class="tok-ticker">ARB</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">252.6</td>
+      <td class="num">$0.80</td>
+      <td class="num">$202.08</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-arb-01&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-01-11</td>
+      <td class="tok-ticker">BTC</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.00105</td>
+      <td class="num">$94,600.00</td>
+      <td class="num">$99.33</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-btc-01&#39;)">delete</button></td>
+    </tr>
+    <tr>
+      <td class="mono">2025-01-11</td>
+      <td class="tok-ticker">ETH</td>
+      <td><span style="color:var(--pos);text-transform:uppercase;font-size:12px;font-weight:600;">buy</span></td>
+      <td class="num">0.0306</td>
+      <td class="num">$3,275.00</td>
+      <td class="num">$100.21</td>
+      <td style="color:var(--text3);font-size:12.5px;">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx(&#39;seed-eth-01&#39;)">delete</button></td>
+    </tr></tbody>
+        </table>
+        <div class="empty-state" id="txEmpty" style="display:none;">
+          <div class="display">No transactions yet</div>
+          <div>Every transaction added here automatically recalculates your portfolio.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKETS -->
+    <div class="page" id="page-markets">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Markets</div>
+          <div class="page-sub">Full live market, ranked by market cap — like CoinMarketCap, 100 coins per page.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input class="field" id="marketsSearch" placeholder="Search name or ticker..." style="width:200px;" oninput="handleMarketsSearch(this.value)">
+          <button class="btn btn-gold" onclick="loadMarketsPage(marketsState.page)">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div id="marketsStatus" style="font-size:12px;color:var(--text3);margin-bottom:10px;"></div>
+        <table>
+          <thead><tr>
+            <th id="mkthRank" class="num" style="cursor:pointer;" onclick="setMarketsSort('rank')">#</th>
+            <th id="mkthCoin" style="cursor:pointer;" onclick="setMarketsSort('coin')">Coin</th>
+            <th id="mkthPrice" class="num" style="cursor:pointer;" onclick="setMarketsSort('price')">Price</th>
+            <th id="mkthChg" class="num" style="cursor:pointer;" onclick="setMarketsSort('chg')">24h %</th>
+            <th id="mkthMcap" class="num" style="cursor:pointer;" onclick="setMarketsSort('mcap')">Market Cap</th><th></th>
+          </tr></thead>
+          <tbody id="marketsTable"></tbody>
+        </table>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px;">
+          <button class="btn btn-sm" id="marketsPrevBtn" onclick="loadMarketsPage(marketsState.page-1)">← Prev</button>
+          <span id="marketsPageLabel" style="font-size:13px;color:var(--text2);"></span>
+          <button class="btn btn-sm" id="marketsNextBtn" onclick="loadMarketsPage(marketsState.page+1)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WATCHLIST -->
+    <div class="page" id="page-watchlist">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Watchlist</div>
+          <div class="page-sub">ACCEPT / WATCH tokens not currently in My portfolio.</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-gold" onclick="refreshWatchlistPrices()">↻ Refresh prices</button>
+        </div>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr>
+            <th id="wlthToken" style="cursor:pointer;" onclick="setWatchlistSort('ticker')">Token</th>
+            <th id="wlthVerdict" style="cursor:pointer;" onclick="setWatchlistSort('verdict')">Verdict</th>
+            <th id="wlthSector" style="cursor:pointer;" onclick="setWatchlistSort('sector')">Sector</th>
+            <th id="wlthPrice" class="num" style="cursor:pointer;" onclick="setWatchlistSort('price')">Price</th><th></th>
+          </tr></thead>
+          <tbody id="watchlistTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RISK / ANALYTICS -->
+    <div class="page" id="page-risk">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Risk / Analytics</div>
+        </div>
+      </div>
+      <div class="cards-row" id="concentrationCards"></div>
+      <div class="panel">
+        <div class="panel-title">Top holdings concentration</div>
+        <div id="concentrationBars"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Correlation &amp; beta vs BTC</span>
+          <button class="btn btn-sm" onclick="runRiskAnalysis()">Run analysis (live data)</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Fetches ~90 days of daily prices from CoinGecko for each holding + BTC. Only runs when you click the button — not automatic.</div>
+        <div id="riskAnalysisResult"><div style="color:var(--text3);font-size:13px;">Click "Run analysis" to calculate.</div></div>
+      </div>
+    </div>
+
+    <!-- TARGET PORTFOLIOS (generated dynamically in JS, based on store.portfolios) -->
+    <div id="portfolioPages"><div class="page" id="page-p1">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Safe</div>
+        <div class="page-sub">Claude - August 2026</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-gold btn-sm" onclick="openTxModal()">+ Add transaction</button>
+        <button class="btn btn-sm" onclick="addTokenToPortfolio(&#39;p1&#39;)">+ Add token</button>
+        <button class="btn btn-sm" onclick="renamePortfolio(&#39;p1&#39;)">✎ Rename</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePortfolio(&#39;p1&#39;)">✕ Delete portfolio</button>
+      </div>
+    </div>
+    <div class="panel">
+      <table>
+        <thead><tr><th>Token</th><th class="num">% target</th><th class="num">% actual</th><th class="num">Drift</th><th class="num">Current price</th><th></th></tr></thead>
+        <tbody><tr>
+      <td><span class="tok-ticker">BTC</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p1&#39;,&#39;BTC&#39;)" title="Click pentru a edita %">42%</td>
+      <td class="num">36.0%</td>
+      <td class="num"><span style="color:var(--neg);">-6.0pp</span></td>
+      <td class="num">$62,715.00</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p1&#39;,&#39;BTC&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ETH</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p1&#39;,&#39;ETH&#39;)" title="Click pentru a edita %">18%</td>
+      <td class="num">53.8%</td>
+      <td class="num"><span style="color:var(--pos);">+35.8pp</span></td>
+      <td class="num">$1,873.44</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p1&#39;,&#39;ETH&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">LINK</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p1&#39;,&#39;LINK&#39;)" title="Click pentru a edita %">8%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-8.0pp</span></td>
+      <td class="num">$8.86</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p1&#39;,&#39;LINK&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">HYPE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p1&#39;,&#39;HYPE&#39;)" title="Click pentru a edita %">8%</td>
+      <td class="num">7.2%</td>
+      <td class="num"><span style="color:var(--text3);">-0.8pp</span></td>
+      <td class="num">$56.06</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p1&#39;,&#39;HYPE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">SOL</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p1&#39;,&#39;SOL&#39;)" title="Click pentru a edita %">8%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-8.0pp</span></td>
+      <td class="num">$75.37</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p1&#39;,&#39;SOL&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">AAVE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p1&#39;,&#39;AAVE&#39;)" title="Click pentru a edita %">6%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-6.0pp</span></td>
+      <td class="num">$85.48</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p1&#39;,&#39;AAVE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">UNI</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p1&#39;,&#39;UNI&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num">$3.23</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p1&#39;,&#39;UNI&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">CASH</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p1&#39;,&#39;CASH&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">—</td>
+      <td class="num"><span style="color:var(--text3);">—</span></td>
+      <td class="num">—</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p1&#39;,&#39;CASH&#39;)">delete</button></td>
+    </tr></tbody>
+      </table>
+    </div></div><div class="page" id="page-p2">
+    <div class="page-head">
+      <div>
+        <div class="page-title">Medium Risk</div>
+        <div class="page-sub">Claude - August 2026</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-gold btn-sm" onclick="openTxModal()">+ Add transaction</button>
+        <button class="btn btn-sm" onclick="addTokenToPortfolio(&#39;p2&#39;)">+ Add token</button>
+        <button class="btn btn-sm" onclick="renamePortfolio(&#39;p2&#39;)">✎ Rename</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePortfolio(&#39;p2&#39;)">✕ Delete portfolio</button>
+      </div>
+    </div>
+    <div class="panel">
+      <table>
+        <thead><tr><th>Token</th><th class="num">% target</th><th class="num">% actual</th><th class="num">Drift</th><th class="num">Current price</th><th></th></tr></thead>
+        <tbody><tr>
+      <td><span class="tok-ticker">BTC</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;BTC&#39;)" title="Click pentru a edita %">20%</td>
+      <td class="num">36.0%</td>
+      <td class="num"><span style="color:var(--pos);">+16.0pp</span></td>
+      <td class="num">$62,715.00</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;BTC&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ETH</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;ETH&#39;)" title="Click pentru a edita %">12%</td>
+      <td class="num">53.8%</td>
+      <td class="num"><span style="color:var(--pos);">+41.8pp</span></td>
+      <td class="num">$1,873.44</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;ETH&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">HYPE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;HYPE&#39;)" title="Click pentru a edita %">12%</td>
+      <td class="num">7.2%</td>
+      <td class="num"><span style="color:var(--neg);">-4.8pp</span></td>
+      <td class="num">$56.06</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;HYPE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">SKY</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;SKY&#39;)" title="Click pentru a edita %">6%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-6.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;SKY&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">SYRUP</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;SYRUP&#39;)" title="Click pentru a edita %">6%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-6.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;SYRUP&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">LINK</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;LINK&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num">$8.86</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;LINK&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">SOL</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;SOL&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num">$75.37</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;SOL&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">PENDLE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;PENDLE&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;PENDLE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">AAVE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;AAVE&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num">$85.48</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;AAVE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">INJ</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;INJ&#39;)" title="Click pentru a edita %">4%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-4.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;INJ&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ENA</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;ENA&#39;)" title="Click pentru a edita %">4%</td>
+      <td class="num">1.1%</td>
+      <td class="num"><span style="color:var(--neg);">-2.9pp</span></td>
+      <td class="num">$0.0836</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;ENA&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">UNI</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;UNI&#39;)" title="Click pentru a edita %">3%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-3.0pp</span></td>
+      <td class="num">$3.23</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;UNI&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">CAKE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;CAKE&#39;)" title="Click pentru a edita %">3%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-3.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;CAKE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">GEOD</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;GEOD&#39;)" title="Click pentru a edita %">3%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-3.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;GEOD&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ONDO</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;ONDO&#39;)" title="Click pentru a edita %">3%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-3.0pp</span></td>
+      <td class="num">$0.3272</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;ONDO&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">TAO</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;TAO&#39;)" title="Click pentru a edita %">3%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-3.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;TAO&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ARB</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p2&#39;,&#39;ARB&#39;)" title="Click pentru a edita %">1%</td>
+      <td class="num">0.6%</td>
+      <td class="num"><span style="color:var(--text3);">-0.4pp</span></td>
+      <td class="num">$0.0743</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p2&#39;,&#39;ARB&#39;)">delete</button></td>
+    </tr></tbody>
+      </table>
+    </div></div><div class="page" id="page-p3">
+    <div class="page-head">
+      <div>
+        <div class="page-title">High Risk - High Reward</div>
+        <div class="page-sub">Claude - August 2026</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-gold btn-sm" onclick="openTxModal()">+ Add transaction</button>
+        <button class="btn btn-sm" onclick="addTokenToPortfolio(&#39;p3&#39;)">+ Add token</button>
+        <button class="btn btn-sm" onclick="renamePortfolio(&#39;p3&#39;)">✎ Rename</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePortfolio(&#39;p3&#39;)">✕ Delete portfolio</button>
+      </div>
+    </div>
+    <div class="panel">
+      <table>
+        <thead><tr><th>Token</th><th class="num">% target</th><th class="num">% actual</th><th class="num">Drift</th><th class="num">Current price</th><th></th></tr></thead>
+        <tbody><tr>
+      <td><span class="tok-ticker">HYPE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;HYPE&#39;)" title="Click pentru a edita %">14%</td>
+      <td class="num">7.2%</td>
+      <td class="num"><span style="color:var(--neg);">-6.8pp</span></td>
+      <td class="num">$56.06</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;HYPE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">BTC</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;BTC&#39;)" title="Click pentru a edita %">10%</td>
+      <td class="num">36.0%</td>
+      <td class="num"><span style="color:var(--pos);">+26.0pp</span></td>
+      <td class="num">$62,715.00</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;BTC&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ETH</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;ETH&#39;)" title="Click pentru a edita %">8%</td>
+      <td class="num">53.8%</td>
+      <td class="num"><span style="color:var(--pos);">+45.8pp</span></td>
+      <td class="num">$1,873.44</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;ETH&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">SYRUP</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;SYRUP&#39;)" title="Click pentru a edita %">8%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-8.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;SYRUP&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">PENDLE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;PENDLE&#39;)" title="Click pentru a edita %">7%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-7.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;PENDLE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">INJ</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;INJ&#39;)" title="Click pentru a edita %">6%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-6.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;INJ&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ENA</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;ENA&#39;)" title="Click pentru a edita %">6%</td>
+      <td class="num">1.1%</td>
+      <td class="num"><span style="color:var(--neg);">-4.9pp</span></td>
+      <td class="num">$0.0836</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;ENA&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">CAKE</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;CAKE&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;CAKE&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">GEOD</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;GEOD&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;GEOD&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ARB</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;ARB&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.6%</td>
+      <td class="num"><span style="color:var(--neg);">-4.4pp</span></td>
+      <td class="num">$0.0743</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;ARB&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ONDO</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;ONDO&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num">$0.3272</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;ONDO&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">TAO</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;TAO&#39;)" title="Click pentru a edita %">5%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-5.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;TAO&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">JUP</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;JUP&#39;)" title="Click pentru a edita %">4%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-4.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;JUP&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">MORPHO</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;MORPHO&#39;)" title="Click pentru a edita %">3%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-3.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;MORPHO&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">AKT</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;AKT&#39;)" title="Click pentru a edita %">3%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-3.0pp</span></td>
+      <td class="num">$0.517</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;AKT&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">JTO</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;JTO&#39;)" title="Click pentru a edita %">3%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-3.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;JTO&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">ZIG</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;ZIG&#39;)" title="Click pentru a edita %">1%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-1.0pp</span></td>
+      <td class="num"><span style="color:var(--text3);">nerezolvat</span></td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;ZIG&#39;)">delete</button></td>
+    </tr><tr>
+      <td><span class="tok-ticker">BNB</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct(&#39;p3&#39;,&#39;BNB&#39;)" title="Click pentru a edita %">2%</td>
+      <td class="num">0.0%</td>
+      <td class="num"><span style="color:var(--neg);">-2.0pp</span></td>
+      <td class="num">$604.72</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio(&#39;p3&#39;,&#39;BNB&#39;)">delete</button></td>
+    </tr></tbody>
+      </table>
+    </div></div></div>
+
+  </div>
+</div>
+
+<!-- TX MODAL -->
+<div class="modal-bg" id="txModalBg">
+  <div class="modal">
+    <h3>Add transaction</h3>
+    <label class="flabel">Ticker</label>
+    <input class="field" id="txTicker" placeholder="e.g. BTC, ETH, HYPE..." style="margin-bottom:10px;" autocomplete="off">
+    <div id="tickerSearchResults" class="search-results" style="display:none;"></div>
+    <div id="tickerConfirmed" style="font-size:12.5px;color:var(--text3);margin:8px 0;"></div>
+
+    <div class="form-grid" style="margin-top:10px;">
+      <div>
+        <label class="flabel">Type</label>
+        <select class="field" id="txType">
+          <option value="buy">Buy</option>
+          <option value="sell">Sell</option>
+        </select>
+      </div>
+      <div>
+        <label class="flabel">Date</label>
+        <input class="field" id="txDate" type="date">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="flabel">Quantity</label>
+        <input class="field" id="txQty" type="number" step="any" placeholder="0.00">
+      </div>
+      <div>
+        <label class="flabel">Unit price (USD)</label>
+        <input class="field" id="txPrice" type="number" step="any" placeholder="0.00">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label class="flabel">Source (wallet/exchange, optional)</label>
+        <input class="field" id="txSource" placeholder="e.g. Binance, Ledger, MetaMask">
+      </div>
+    </div>
+    <label class="flabel">Note (optional)</label>
+    <input class="field" id="txNote" placeholder="e.g. Monthly DCA, transfer from Binance...">
+
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn" onclick="closeTxModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveTx()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TOKEN TO PORTFOLIO MODAL -->
+<div class="modal-bg" id="addTokenModalBg">
+  <div class="modal">
+    <h3>Add token to portfolio</h3>
+    <label class="flabel">Ticker</label>
+    <input class="field" id="atTicker" placeholder="e.g. BTC, ETH, HYPE..." style="margin-bottom:10px;" autocomplete="off">
+    <div id="atSearchResults" class="search-results" style="display:none;"></div>
+    <div id="atConfirmed" style="font-size:12.5px;color:var(--text3);margin:8px 0;"></div>
+
+    <label class="flabel" style="margin-top:8px;">% target allocation</label>
+    <input class="field" id="atPct" type="number" step="any" placeholder="e.g. 5">
+
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn" onclick="closeAddTokenModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveTokenToPortfolio()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost"></div>
+
+<script>
+/* =========================================================
+   DATA MODEL & STORAGE
+   ========================================================= */
+const STORAGE_KEY_TX = 'ledger:transactions';
+const STORAGE_KEY_MAP = 'ledger:ticker-map';
+const STORAGE_KEY_PRICES = 'ledger:prices';
+const STORAGE_KEY_SNAPSHOTS = 'ledger:snapshots';
+const STORAGE_KEY_MANUAL_PRICES = 'ledger:manual-prices';
+const STORAGE_KEY_SETTINGS = 'ledger:settings';
+const STORAGE_KEY_PORTFOLIOS = 'ledger:portfolios';
+const STORAGE_KEY_SEED_VERSION = 'ledger:seed-version';
+const STORAGE_KEY_SEED_PATCHES = 'ledger:seed-patches-applied';
+const STORAGE_KEY_FX_RATE = 'ledger:fx-rate';
+
+// Verdict map din framework-ul de value accrual al lui Alex (Baza_verificari_51_monede.md)
+const VERDICTS = {
+  BTC:'ACCEPT', ETH:'ACCEPT', SOL:'ACCEPT', LINK:'ACCEPT', AAVE:'ACCEPT', HYPE:'ACCEPT',
+  UNI:'ACCEPT', CAKE:'ACCEPT', ENA:'ACCEPT', INJ:'ACCEPT',
+  SKY:'WATCH', SYRUP:'WATCH', PENDLE:'WATCH', GEOD:'WATCH', ONDO:'WATCH', TAO:'WATCH',
+  ARB:'WATCH', JTO:'WATCH', ZIG:'WATCH', BNB:'WATCH', MORPHO:'WATCH', AKT:'WATCH', JUP:'WATCH',
+  ZRO:'WATCH', SHFL:'WATCH', OP:'WATCH', RLB:'WATCH', BABY:'WATCH', BTR:'WATCH', AZUR:'WATCH',
+  LMTS:'WATCH', CORE:'WATCH', SUI:'WATCH', TRX:'WATCH', ZEC:'WATCH', NEAR:'WATCH',
+  VIRTUAL:'WATCH', CPOOL:'WATCH', ASTER:'WATCH', ETHFI:'WATCH',
+  CASH:'CASH'
+};
+
+// Clasificare pe sectoare — aproximare mea (Claude), nu e un câmp explicit din DD-urile tale.
+// Folosită doar pentru graficul de breakdown pe sectoare din My portfolio. Dacă vrei o
+// clasificare diferită sau mai precisă pentru un anumit token, spune-mi și o corectez.
+const SECTORS = {
+  BTC:'L1 / Store of value', ETH:'L1 Smart Contract', SOL:'L1 Smart Contract', LINK:'Oracle',
+  AAVE:'DeFi Lending', UNI:'DeFi DEX', CAKE:'DeFi DEX', HYPE:'DeFi Derivatives',
+  ENA:'Stablecoin Infra', INJ:'DeFi Derivatives', SKY:'Stablecoin Infra', SYRUP:'DeFi Lending',
+  PENDLE:'DeFi Derivatives', GEOD:'DePIN', ONDO:'RWA', TAO:'AI / DePIN', ARB:'L2 Scaling',
+  JTO:'Liquid Staking', ZIG:'DeFi Infra', BNB:'L1 Smart Contract', MORPHO:'DeFi Lending',
+  AKT:'DePIN', JUP:'DeFi DEX', ZRO:'Interoperabilitate', SHFL:'Gaming/GameFi', OP:'L2 Scaling',
+  RLB:'Gaming/GameFi', BABY:'BTCfi', BTR:'BTCfi', AZUR:'Prediction Markets', LMTS:'Prediction Markets',
+  CORE:'BTCfi', SUI:'L1 Smart Contract', TRX:'L1 Smart Contract', ZEC:'Privacy', NEAR:'L1 Smart Contract',
+  VIRTUAL:'AI Agents', CPOOL:'DeFi Lending', ASTER:'DeFi Derivatives', ETHFI:'Liquid Restaking',
+  XMR:'Privacy', AUKI:'DePIN', KAITO:'AI / Data', AERO:'DeFi DEX', RENDER:'DePIN', GRT:'Data/Indexing',
+  AVAX:'L1 Smart Contract', ATOM:'Interoperabilitate', EIGEN:'Restaking', SEI:'L1 Smart Contract'
+};
+const SECTOR_COLORS = {
+  'L1 / Store of value':'#F7931A', 'L1 Smart Contract':'#627EEA', 'Oracle':'#375BD2',
+  'DeFi Lending':'#B6509E', 'DeFi DEX':'#FF007A', 'DeFi Derivatives':'#A78BFA',
+  'Stablecoin Infra':'#F472B6', 'DePIN':'#5EEAD4', 'RWA':'#5C6BC0', 'AI / DePIN':'#FACC15',
+  'AI Agents':'#F5A623', 'AI / Data':'#EAB308', 'L2 Scaling':'#28A0F0', 'Liquid Staking':'#818CF8',
+  'DeFi Infra':'#F97316', 'Interoperabilitate':'#38BDF8', 'Gaming/GameFi':'#E879F9',
+  'BTCfi':'#FB923C', 'Prediction Markets':'#60A5FA', 'Privacy':'#94A3B8', 'Liquid Restaking':'#6366F1',
+  'Restaking':'#4F46E5', 'Data/Indexing':'#22D3EE'
+};
+const FALLBACK_SECTOR_COLORS = ['#8F7A2E','#9C9C9C','#E8E6DF','#4A5A73','#9C7A3C','#527A63','#DC2626','#0EA5E9','#D946EF'];
+function getSectorColor(sector){
+  if(SECTOR_COLORS[sector]) return SECTOR_COLORS[sector];
+  let hash = 0;
+  for(let i=0;i<sector.length;i++) hash = (hash*31 + sector.charCodeAt(i)) >>> 0;
+  return FALLBACK_SECTOR_COLORS[hash % FALLBACK_SECTOR_COLORS.length];
+}
+
+// Ticker -> CoinGecko id, doar cele 100% sigure hardcodate. Restul se rezolvă prin search și se cache-uiesc.
+const SEED_MAP = {
+  BTC:'bitcoin', ETH:'ethereum', SOL:'solana', LINK:'chainlink', UNI:'uniswap',
+  AAVE:'aave', BNB:'binancecoin', ARB:'arbitrum', SUI:'sui', TRX:'tron',
+  NEAR:'near', AKT:'akash-network', ONDO:'ondo-finance', OP:'optimism',
+  HYPE:'hyperliquid', ENA:'ethena', AUKI:'auki-labs'
+};
+
+// Portofoliile țintă implicite (seed) — din 3_PORTOFOLII_CRYPTO.md (13.08.2026).
+// Se folosesc doar dacă nu există deja portofolii salvate în storage — după prima
+// rulare, tot ce contează e store.portfolios (poți redenumi/șterge/adăuga liber).
+const DEFAULT_PORTFOLIOS = [
+  { id:'p1', label:'P1 — Safe', note:'Unchanged', tokens:[
+    {t:'BTC',pct:42},{t:'ETH',pct:18},{t:'LINK',pct:8},{t:'HYPE',pct:8},{t:'SOL',pct:8},
+    {t:'AAVE',pct:6},{t:'UNI',pct:5},{t:'CASH',pct:5}
+  ]},
+  { id:'p2', label:'P2 — Moderate-Aggressive', note:'Updated 2026-08-13', tokens:[
+    {t:'BTC',pct:20},{t:'ETH',pct:12},{t:'HYPE',pct:12},{t:'SKY',pct:6},{t:'SYRUP',pct:6},
+    {t:'LINK',pct:5},{t:'SOL',pct:5},{t:'PENDLE',pct:5},{t:'AAVE',pct:5},{t:'INJ',pct:4},
+    {t:'ENA',pct:4},{t:'UNI',pct:3},{t:'CAKE',pct:3},{t:'GEOD',pct:3},{t:'ONDO',pct:3},
+    {t:'TAO',pct:3},{t:'ARB',pct:1}
+  ]},
+  { id:'p3', label:'P3 — High Risk', note:'Updated 2026-08-13', tokens:[
+    {t:'HYPE',pct:14},{t:'BTC',pct:10},{t:'ETH',pct:8},{t:'SYRUP',pct:8},{t:'PENDLE',pct:7},
+    {t:'INJ',pct:6},{t:'ENA',pct:6},{t:'CAKE',pct:5},{t:'GEOD',pct:5},{t:'ARB',pct:5},
+    {t:'ONDO',pct:5},{t:'TAO',pct:5},{t:'JUP',pct:4},{t:'MORPHO',pct:3},{t:'AKT',pct:3},
+    {t:'JTO',pct:3},{t:'ZIG',pct:1},{t:'BNB',pct:2}
+  ]}
+];
+
+let store = { tx:[], tickerMap:{...SEED_MAP}, prices:{}, snapshots:[], manualPrices:{}, settings:{ costBasisMethod:'avg' }, portfolios:[], fxRate:null, fxRateIsLive:false };
+
+// Migrare unică: setul de tranzacții BTC (DCA lunar) transcris manual din tabelul furnizat.
+// Se aplică o singură dată — șterge orice tranzacții existau înainte în "My portfolio" și le
+// înlocuiește cu acestea. La următoarele încărcări (versiunea de migrare deja aplicată) nu se
+// mai repetă, ca să poți edita/șterge liber după aceea fără să-ți revină datele vechi.
+const SEED_MIGRATION_VERSION = 'btc-dca-2025-v1';
+const SEED_TX = [
+  { id:'seed-btc-01', ticker:'BTC', type:'buy', date:'2025-01-11', qty:0.00105, price:94600, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-02', ticker:'BTC', type:'buy', date:'2025-02-27', qty:0.00121, price:86400, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-03', ticker:'BTC', type:'buy', date:'2025-03-06', qty:0.00118, price:91150, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-04', ticker:'BTC', type:'buy', date:'2025-04-09', qty:0.00143, price:76250, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-05', ticker:'BTC', type:'buy', date:'2025-05-08', qty:0.00113, price:99500, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-06', ticker:'BTC', type:'buy', date:'2025-06-06', qty:0.00108, price:104100, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-07', ticker:'BTC', type:'buy', date:'2025-07-07', qty:0.00107, price:112000, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-08', ticker:'BTC', type:'buy', date:'2025-08-04', qty:0.00101, price:114350, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-09', ticker:'BTC', type:'buy', date:'2025-09-08', qty:0.00104, price:112000, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-10', ticker:'BTC', type:'buy', date:'2025-10-06', qty:0.00094, price:124000, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-11', ticker:'BTC', type:'buy', date:'2025-11-18', qty:0.00126, price:91200, amountEUR:100, note:'DCA lunar', source:'' },
+  { id:'seed-btc-12', ticker:'BTC', type:'buy', date:'2025-12-09', qty:0.00128, price:90350, amountEUR:100, note:'DCA lunar', source:'' }
+];
+
+// Patch-uri aditive — tranzacții adăugate ulterior primului seed, aplicate o singură dată fiecare
+// (spre deosebire de SEED_TX, care înlocuiește tot; astea doar adaugă, fără să atingă restul).
+const SEED_PATCHES = [
+  { patchId:'btc-dca-2025-add-13', tx:{ id:'seed-btc-13', ticker:'BTC', type:'buy', date:'2025-06-05', qty:0.01909, price:61150, amountEUR:1000, note:'DCA lunar', source:'' } },
+  { patchId:'eth-dca-2025-2026-v1', txs:[
+    { id:'seed-eth-01', ticker:'ETH', type:'buy', date:'2025-01-11', qty:0.0306, price:3275, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-02', ticker:'ETH', type:'buy', date:'2025-01-17', qty:0.3005, price:3400, amountEUR:1000, note:'DCA lunar', source:'' },
+    { id:'seed-eth-03', ticker:'ETH', type:'buy', date:'2025-01-18', qty:0.0196, price:3300, amountEUR:80, note:'DCA lunar', source:'BITS' },
+    { id:'seed-eth-04', ticker:'ETH', type:'buy', date:'2025-02-03', qty:0.1973, price:2600, amountEUR:500, note:'DCA lunar', source:'' },
+    { id:'seed-eth-05', ticker:'ETH', type:'buy', date:'2025-02-27', qty:0.0445, price:2350, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-06', ticker:'ETH', type:'buy', date:'2025-03-06', qty:0.0473, price:2300, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-07', ticker:'ETH', type:'buy', date:'2025-03-12', qty:0.0574, price:1900, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-08', ticker:'ETH', type:'buy', date:'2025-03-12', qty:0.0576, price:1900, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-09', ticker:'ETH', type:'buy', date:'2025-04-09', qty:0.0756, price:1450, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-10', ticker:'ETH', type:'buy', date:'2025-05-08', qty:0.0588, price:1950, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-11', ticker:'ETH', type:'buy', date:'2025-06-06', qty:0.046, price:2500, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-12', ticker:'ETH', type:'buy', date:'2025-07-07', qty:0.046, price:2550, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-13', ticker:'ETH', type:'buy', date:'2025-08-04', qty:0.0324, price:3550, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-14', ticker:'ETH', type:'buy', date:'2025-09-08', qty:0.0270, price:4350, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-15', ticker:'ETH', type:'sell', date:'2025-09-23', qty:0.1284, price:4150, amountEUR:454, note:'Retragere', source:'' },
+    { id:'seed-eth-16', ticker:'ETH', type:'buy', date:'2025-10-06', qty:0.0258, price:4550, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-17', ticker:'ETH', type:'buy', date:'2025-11-18', qty:0.0386, price:3050, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-18', ticker:'ETH', type:'buy', date:'2025-12-09', qty:0.0380, price:3100, amountEUR:100, note:'DCA lunar', source:'' },
+    { id:'seed-eth-19', ticker:'ETH', type:'buy', date:'2026-02-05', qty:0.5522, price:2130, amountEUR:1000, note:'DCA lunar', source:'' }
+  ]},
+  // tranzacție lipsă, completată la cererea ta ca să ajungi la totalul real deținut (1.63872 ETH).
+  // Preț = prețul ETH de azi (~$1,880, verificat prin căutare web la 14.08.2026) — cost necunoscut real,
+  // deci acesta e o AJUSTARE, nu o achiziție documentată; afectează cost mediu/P&L ca atare.
+  { patchId:'eth-adjustment-missing-tx-1', tx:{ id:'seed-eth-20', ticker:'ETH', type:'buy', date:'2026-08-14', qty:0.07192, price:1880, amountEUR:null, note:'Adjustment — top-up to match real balance (1.63872 ETH), cost unknown, price = current market price', source:'' } },
+  { patchId:'arb-sui-auki-hype-2025-v1', txs:[
+    { id:'seed-arb-01', ticker:'ARB', type:'buy', date:'2025-01-17', qty:252.6, price:0.80, amountEUR:200, note:'', source:'' },
+    { id:'seed-arb-02', ticker:'ARB', type:'buy', date:'2025-02-03', qty:235.1, price:0.43, amountEUR:100, note:'', source:'' },
+    { id:'seed-sui-01', ticker:'SUI', type:'buy', date:'2025-06-22', qty:91.7, price:2.53, amountEUR:200, note:'', source:'' },
+    { id:'seed-auki-01', ticker:'AUKI', type:'buy', date:'2025-09-24', qty:2000, price:0.034, note:'', source:'' },
+    { id:'seed-hype-01', ticker:'HYPE', type:'buy', date:'2025-09-23', qty:7.34, price:44.82, note:'', source:'' }
+  ]},
+  // completare ENA — nu am găsit un preț istoric independent verificat pentru 11.10.2025 (căutarea
+  // web nu a întors date specifice pe zi); am folosit media celor 2 tranzacții reale din chiar acea
+  // zi (0.44 și 0.43) ca cea mai bună estimare disponibilă. 777 - (138+246) = 393 ENA lipsă.
+  { patchId:'ena-2025-10-11-v1', txs:[
+    { id:'seed-ena-01', ticker:'ENA', type:'buy', date:'2025-10-11', qty:138, price:0.44, amountUSD:60, note:'', source:'' },
+    { id:'seed-ena-02', ticker:'ENA', type:'buy', date:'2025-10-11', qty:246, price:0.43, amountUSD:286, note:'', source:'' },
+    { id:'seed-ena-03', ticker:'ENA', type:'buy', date:'2025-10-11', qty:393, price:0.435, note:'Top-up to 777 ENA — price = average of the 2 same-day transactions, not independently verified', source:'' }
+  ]}
+];
+
+// Patch de CORECȚIE — tranzacțiile seed erau deja aplicate pe storage-ul tău FĂRĂ câmpul
+// amountEUR (suma reală investită în EUR, din coloana "Suma" a tabelului tău). Fără el, "Total
+// invested" era recalculat din qty×preț(USD) și convertit cu cursul aproximativ curent — de-asta
+// ieșea 2173,46 în loc de 2200: era o reconstrucție indirectă, nu suma reală pe care ai investit-o.
+// Acest patch completează câmpul lipsă pe tranzacțiile deja existente, o singură dată.
+const EUR_AMOUNT_FIX_PATCH_ID = 'btc-dca-2025-add-eur-amounts-fix';
+const EUR_AMOUNT_FIX_MAP = {
+  'seed-btc-01':100, 'seed-btc-02':100, 'seed-btc-03':100, 'seed-btc-04':100,
+  'seed-btc-05':100, 'seed-btc-06':100, 'seed-btc-07':100, 'seed-btc-08':100,
+  'seed-btc-09':100, 'seed-btc-10':100, 'seed-btc-11':100, 'seed-btc-12':100,
+  'seed-btc-13':1000
+};
+
+async function storageGet(key){
+  try{
+    if(window.storage){
+      const r = await window.storage.get(key, false);
+      return r ? JSON.parse(r.value) : null;
+    }
+  }catch(e){ /* key not found or window.storage unavailable */ }
+  try{
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : null;
+  }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  try{
+    if(window.storage){
+      await window.storage.set(key, JSON.stringify(value), false);
+      return;
+    }
+  }catch(e){ /* fall through to localStorage */ }
+  try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
+}
+
+async function loadAll(){
+  store.tx = (await storageGet(STORAGE_KEY_TX)) || [];
+  store.tickerMap = { ...SEED_MAP, ...((await storageGet(STORAGE_KEY_MAP)) || {}) };
+  store.prices = (await storageGet(STORAGE_KEY_PRICES)) || {};
+  store.snapshots = (await storageGet(STORAGE_KEY_SNAPSHOTS)) || [];
+  store.manualPrices = (await storageGet(STORAGE_KEY_MANUAL_PRICES)) || {};
+  const savedFxRate = await storageGet(STORAGE_KEY_FX_RATE);
+  store.fxRate = savedFxRate !== null ? savedFxRate : null;
+  store.fxRateIsLive = savedFxRate !== null;
+  store.settings = { costBasisMethod:'avg', ...((await storageGet(STORAGE_KEY_SETTINGS)) || {}) };
+  const savedPortfolios = await storageGet(STORAGE_KEY_PORTFOLIOS);
+  store.portfolios = savedPortfolios !== null ? savedPortfolios : JSON.parse(JSON.stringify(DEFAULT_PORTFOLIOS));
+
+  // migrare unică: șterge tranzacțiile existente și le înlocuiește cu setul BTC DCA, o singură dată
+  const appliedSeedVersion = await storageGet(STORAGE_KEY_SEED_VERSION);
+  if(appliedSeedVersion !== SEED_MIGRATION_VERSION){
+    store.tx = JSON.parse(JSON.stringify(SEED_TX));
+    store.snapshots = []; // evoluția valorii pornește curat, ca să nu amestece cu date vechi
+    saveTxStore();
+    saveSnapshotsStore();
+    await storageSet(STORAGE_KEY_SEED_VERSION, SEED_MIGRATION_VERSION);
+  }
+
+  // patch-uri aditive ulterioare — fiecare se aplică o singură dată, nu atinge restul tranzacțiilor
+  let appliedPatches = (await storageGet(STORAGE_KEY_SEED_PATCHES)) || [];
+  let patchesChanged = false;
+  for(const p of SEED_PATCHES){
+    if(!appliedPatches.includes(p.patchId)){
+      if(p.tx) store.tx.push(JSON.parse(JSON.stringify(p.tx)));
+      if(p.txs) p.txs.forEach(t=> store.tx.push(JSON.parse(JSON.stringify(t))));
+      appliedPatches.push(p.patchId);
+      patchesChanged = true;
+    }
+  }
+
+  // patch de corecție — completează amountEUR pe tranzacțiile seed deja existente în storage-ul tău
+  if(!appliedPatches.includes(EUR_AMOUNT_FIX_PATCH_ID)){
+    store.tx.forEach(t=>{
+      if(EUR_AMOUNT_FIX_MAP[t.id] !== undefined && t.amountEUR === undefined){
+        t.amountEUR = EUR_AMOUNT_FIX_MAP[t.id];
+        patchesChanged = true;
+      }
+    });
+    appliedPatches.push(EUR_AMOUNT_FIX_PATCH_ID);
+    patchesChanged = true;
+  }
+
+  // patch — traduce în engleză etichetele/notele portofoliilor P1/P2/P3 deja salvate în storage-ul
+  // tău (au fost create înainte de traducerea completă a aplicației, deci au rămas în română)
+  const EN_LABEL_FIX_PATCH_ID = 'portfolio-labels-en-fix-v1';
+  const EN_LABEL_FIX_MAP = {
+    p1: { label:'P1 — Safe', note:'Unchanged' },
+    p2: { label:'P2 — Moderate-Aggressive', note:'Updated 2026-08-13' },
+    p3: { label:'P3 — High Risk', note:'Updated 2026-08-13' }
+  };
+  if(!appliedPatches.includes(EN_LABEL_FIX_PATCH_ID)){
+    store.portfolios.forEach(p=>{
+      const fix = EN_LABEL_FIX_MAP[p.id];
+      if(fix){ p.label = fix.label; p.note = fix.note; }
+    });
+    savePortfoliosStore();
+    appliedPatches.push(EN_LABEL_FIX_PATCH_ID);
+    patchesChanged = true;
+  }
+
+  if(patchesChanged){
+    saveTxStore();
+    await storageSet(STORAGE_KEY_SEED_PATCHES, appliedPatches);
+  }
+}
+function saveTxStore(){ storageSet(STORAGE_KEY_TX, store.tx); }
+function saveMapStore(){ storageSet(STORAGE_KEY_MAP, store.tickerMap); }
+function savePricesStore(){ storageSet(STORAGE_KEY_PRICES, store.prices); }
+function saveSnapshotsStore(){ storageSet(STORAGE_KEY_SNAPSHOTS, store.snapshots); }
+function saveManualPricesStore(){ storageSet(STORAGE_KEY_MANUAL_PRICES, store.manualPrices); }
+function saveFxRateStore(){ storageSet(STORAGE_KEY_FX_RATE, store.fxRate); }
+function saveSettingsStore(){ storageSet(STORAGE_KEY_SETTINGS, store.settings); }
+function savePortfoliosStore(){ storageSet(STORAGE_KEY_PORTFOLIOS, store.portfolios); }
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+function toast(msg, warn){
+  const el = document.createElement('div');
+  el.className = 'toast' + (warn ? ' warn':'');
+  el.textContent = msg;
+  document.getElementById('toastHost').appendChild(el);
+  setTimeout(()=>el.remove(), 5200);
+}
+
+/* =========================================================
+   NAVIGATION (delegation — funcționează și pt. butoane
+   generate dinamic pentru portofolii adăugate de user)
+   ========================================================= */
+function goToPage(pageId){
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const btn = document.querySelector(`.navbtn[data-page="${pageId}"]`);
+  const page = document.getElementById('page-'+pageId);
+  if(btn) btn.classList.add('active');
+  if(page) page.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+}
+document.getElementById('sidebar').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.navbtn[data-page]');
+  if(!btn) return;
+  goToPage(btn.dataset.page);
+});
+
+// legare explicită prin addEventListener (nu attribute inline oninput=""), ca autocomplete-ul
+// de ticker să funcționeze indiferent de politica CSP a mediului în care rulează artifact-ul
+document.getElementById('txTicker').addEventListener('input', (e)=> handleTickerSearch(e.target.value));
+document.getElementById('atTicker').addEventListener('input', (e)=> handleTokenSearch(e.target.value));
+
+/* =========================================================
+   COINGECKO INTEGRATION
+   ========================================================= */
+async function resolveTicker(ticker){
+  ticker = ticker.toUpperCase().trim();
+  if(store.tickerMap[ticker]) return store.tickerMap[ticker];
+  try{
+    const res = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(ticker)}`);
+    if(!res.ok) throw new Error('http '+res.status);
+    const data = await res.json();
+    return data.coins ? data.coins.slice(0,8) : [];
+  }catch(e){
+    return null;
+  }
+}
+
+async function fetchPrices(ids){
+  if(!ids.length) return {};
+  try{
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd,eur`);
+    if(!res.ok) throw new Error('http '+res.status);
+    return await res.json();
+  }catch(e){
+    return null;
+  }
+}
+
+// curs USD->EUR: dacă avem date live de la CoinGecko (perechi usd+eur pentru aceeași monedă),
+// calculăm cursul real din ele. Dacă nu avem nimic (API blocat), cădem pe o valoare aproximativă
+// FIXĂ, NEVERIFICATĂ live — marcată explicit ca atare în UI, nu prezentată ca preț curent real.
+const FALLBACK_USD_EUR_RATE = 0.92; // aproximare, neactualizată live — verifică separat dacă contează exact
+
+async function refreshAllPrices(){
+  const idsNeeded = new Set();
+  Object.values(store.portfolios).forEach(p=>p.tokens.forEach(t=>{
+    if(t.t!=='CASH' && store.tickerMap[t.t]) idsNeeded.add(store.tickerMap[t.t]);
+  }));
+  getRealHoldings().forEach(h=>{ if(store.tickerMap[h.ticker]) idsNeeded.add(store.tickerMap[h.ticker]); });
+  Object.keys(VERDICTS).forEach(t=>{ if(t!=='CASH' && store.tickerMap[t]) idsNeeded.add(store.tickerMap[t]); });
+
+  const result = await fetchPrices([...idsNeeded]);
+  if(result === null){
+    toast('Could not reach CoinGecko from this environment (the artifact sandbox likely blocks external fetches). Download the file and open it directly in a browser for live prices.', true);
+    return false;
+  }
+  Object.entries(result).forEach(([id, val])=>{
+    store.prices[id] = val.usd;
+  });
+  // recalculate the USD->EUR rate as an average from the usd/eur pairs just received (freshest available)
+  const rateSamples = Object.values(result).filter(v=>v.usd && v.eur).map(v=>v.eur/v.usd);
+  if(rateSamples.length){
+    store.fxRate = rateSamples.reduce((a,b)=>a+b,0) / rateSamples.length;
+    store.fxRateIsLive = true;
+    saveFxRateStore();
+  }
+  savePricesStore();
+  const now = new Date().toISOString();
+
+  // snapshot for the evolution chart
+  const totalVal = getRealHoldings().reduce((s,h)=>s + (getPrice(h.ticker)||0)*h.qty, 0);
+  store.snapshots.push({date:now, value:totalVal});
+  if(store.snapshots.length > 500) store.snapshots.shift();
+  saveSnapshotsStore();
+
+  renderAll();
+  return true;
+}
+
+
+function getPrice(ticker){
+  // preț manual are prioritate — util când API-ul CoinGecko e blocat în acest mediu (sandbox artifact)
+  if(store.manualPrices[ticker] !== undefined && store.manualPrices[ticker] !== null && store.manualPrices[ticker] !== '') {
+    return parseFloat(store.manualPrices[ticker]);
+  }
+  const id = store.tickerMap[ticker];
+  if(!id) return null;
+  return store.prices[id] ?? null;
+}
+function isManualPrice(ticker){
+  return store.manualPrices[ticker] !== undefined && store.manualPrices[ticker] !== null && store.manualPrices[ticker] !== '';
+}
+function setManualPrice(ticker, val){
+  const parsed = parseFloat(val);
+  if(val === '' || val === null || isNaN(parsed)){
+    delete store.manualPrices[ticker];
+  } else if(parsed < 0){
+    toast('Price cannot be negative.', true);
+    return;
+  } else {
+    store.manualPrices[ticker] = parsed;
+  }
+  saveManualPricesStore();
+  renderAll();
+}
+
+/* =========================================================
+   TICKER SEARCH — dropdown local instant (nu depinde de rețea,
+   funcționează chiar dacă fetch-ul extern e blocat în acest mediu)
+   + completare opțională cu rezultate live CoinGecko când sunt disponibile.
+   Folosit atât în modalul de tranzacție, cât și la adăugarea unui token
+   într-un portofoliu țintă.
+   ========================================================= */
+let pendingTicker = null;
+let searchTimeout = null;
+
+// universul de tickere cunoscute local: verdictele lui Alex + mapările deja rezolvate
+function localTickerMatches(raw){
+  const pool = new Set([
+    ...Object.keys(VERDICTS).filter(k=>k!=='CASH'),
+    ...Object.keys(SEED_MAP),
+    ...Object.keys(store.tickerMap)
+  ]);
+  return [...pool].filter(t=>t.startsWith(raw)).sort().slice(0,8);
+}
+
+function renderTickerDropdown(box, matches, onSelect){
+  if(!matches.length){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='block';
+  box.innerHTML = matches.map(t=>{
+    const known = store.tickerMap[t];
+    return `<div class="sr-item" data-t="${t}">
+      <span class="tok-ticker">${t}</span>
+      <span style="color:var(--text3);">${known?'mapat':'click to select'}</span>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.sr-item').forEach(el=>{
+    el.addEventListener('click', ()=> onSelect(el.dataset.t));
+  });
+}
+
+function handleTickerSearch(val){
+  clearTimeout(searchTimeout);
+  const raw = val.toUpperCase().trim();
+  document.getElementById('tickerConfirmed').textContent = '';
+  pendingTicker = null;
+  const box = document.getElementById('tickerSearchResults');
+  if(!raw){ box.style.display='none'; return; }
+
+  if(store.tickerMap[raw]){
+    pendingTicker = raw;
+    box.style.display='none';
+    document.getElementById('tickerConfirmed').textContent = `✓ ${raw} → ${store.tickerMap[raw]} (known mapping)`;
+    return;
+  }
+
+  // dropdown local — apare imediat, fără să aștepte rețeaua
+  renderTickerDropdown(box, localTickerMatches(raw), (t)=>{
+    confirmTickerMap(t, store.tickerMap[t] || null, t, t);
+  });
+
+  // completare cu rezultate live CoinGecko, dacă răspunde (păstrează lista locală dacă nu)
+  searchTimeout = setTimeout(async ()=>{
+    const results = await resolveTicker(raw);
+    if(results === null || !results.length) return;
+    box.style.display='block';
+    box.innerHTML = results.map(c=>`
+      <div class="sr-item" onclick="confirmTickerMap('${stripQuotes(raw)}','${stripQuotes(c.id)}','${stripQuotes((c.symbol||'').toUpperCase())}','${stripQuotes(c.name)}')">
+        <span>${escapeHtml(c.name||'')} <span class="badge">${escapeHtml((c.symbol||'').toUpperCase())}</span></span>
+        <span style="color:var(--text3);">${c.market_cap_rank ? '#'+c.market_cap_rank : ''}</span>
+      </div>`).join('');
+  }, 450);
+}
+
+function confirmTickerMap(ticker, id, symbol, name){
+  ticker = sanitizeTicker(ticker);
+  if(id){ store.tickerMap[ticker] = id; saveMapStore(); }
+  pendingTicker = ticker;
+  document.getElementById('tickerSearchResults').style.display='none';
+  document.getElementById('tickerConfirmed').textContent = id
+    ? `✓ ${ticker} mapat la "${name}" (${id})`
+    : `✓ ${ticker} selected (no live price yet — you can set a manual price from My portfolio)`;
+}
+
+/* =========================================================
+   TRANSACTIONS
+   ========================================================= */
+function openTxModal(){
+  document.getElementById('txModalBg').classList.add('open');
+  document.getElementById('txDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('txTicker').value = '';
+  document.getElementById('txQty').value = '';
+  document.getElementById('txPrice').value = '';
+  document.getElementById('txNote').value = '';
+  document.getElementById('txSource').value = '';
+  document.getElementById('tickerConfirmed').textContent = '';
+  document.getElementById('tickerSearchResults').style.display='none';
+  pendingTicker = null;
+}
+function closeTxModal(){ document.getElementById('txModalBg').classList.remove('open'); }
+
+function saveTx(){
+  const tickerRaw = sanitizeTicker(document.getElementById('txTicker').value);
+  const ticker = sanitizeTicker(pendingTicker) || tickerRaw;
+  const type = document.getElementById('txType').value;
+  const date = document.getElementById('txDate').value;
+  const qty = parseFloat(document.getElementById('txQty').value);
+  const price = parseFloat(document.getElementById('txPrice').value);
+  const note = document.getElementById('txNote').value;
+  const source = document.getElementById('txSource').value.trim();
+
+  if(!ticker || !date || isNaN(qty) || qty<=0 || isNaN(price) || price<0){
+    toast('Fill in ticker, date, a quantity greater than 0, and a non-negative price.', true);
+    return;
+  }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){
+    toast('Invalid date — use the date picker (YYYY-MM-DD).', true);
+    return;
+  }
+  if(!store.tickerMap[ticker]){
+    toast(`"${ticker}" doesn't have a confirmed CoinGecko mapping — pick it from the list before saving, otherwise the live price won't work for it. You can set a manual price from My portfolio.`, true);
+  }
+  if(type==='sell'){
+    const held = getRealHoldings().find(h=>h.ticker===ticker);
+    const heldQty = held ? held.qty : 0;
+    if(qty > heldQty + 0.0000001){
+      toast(`Warning: selling ${qty} ${ticker} but My portfolio only shows ${heldQty.toFixed(6)} held — cost basis for this token may go negative/incorrect. Saved anyway; double-check your transaction history for this token.`, true);
+    }
+  }
+  store.tx.push({
+    id: Date.now()+Math.random().toString(16).slice(2),
+    ticker, type, date, qty, price, note, source
+  });
+  saveTxStore();
+  closeTxModal();
+  renderAll();
+  toast(`Transaction saved: ${type.toUpperCase()} ${qty} ${ticker}`);
+}
+
+/* =========================================================
+   CSV IMPORT / EXPORT TRANZACȚII
+   (idee preluată din CoinStats/Delta — flux de import CSV pentru
+   wallet-uri/exchange-uri nesuportate direct; aici e util mai ales
+   ca să ocolești blocajul de fetch extern din acest mediu)
+   ========================================================= */
+function csvEscape(v){
+  if(v===undefined||v===null) v='';
+  v = String(v);
+  if(v.includes(',')||v.includes('"')||v.includes('\n')){
+    return '"'+v.replace(/"/g,'""')+'"';
+  }
+  return v;
+}
+function exportCsv(){
+  if(!store.tx.length){ toast('You have no transactions to export.', true); return; }
+  const header = ['date','ticker','type','qty','price','note','source','amountEUR'];
+  const rows = store.tx.map(t=> header.map(k=>csvEscape(t[k])).join(','));
+  const csv = header.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ledger-tranzactii-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast(`CSV export: ${store.tx.length} transactions.`);
+}
+
+// parser CSV simplu, suportă câmpuri între ghilimele cu virgule/newline interior
+function parseCsv(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c==='"'){
+        if(text[i+1]==='"'){ field+='"'; i++; } else { inQuotes=false; }
+      } else field += c;
+    } else {
+      if(c==='"') inQuotes = true;
+      else if(c===','){ row.push(field); field=''; }
+      else if(c==='\n' || c==='\r'){
+        if(c==='\r' && text[i+1]==='\n') i++;
+        row.push(field); field='';
+        if(row.length>1 || row[0]!=='') rows.push(row);
+        row = [];
+      } else field += c;
+    }
+  }
+  if(field!=='' || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+function handleCsvImport(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      // Excel/Numbers exportă adesea CSV cu BOM UTF-8 la început — dacă nu-l scoatem, primul
+      // header ("date") nu se mai potrivește cu "date" din indexOf și importul pare "gol".
+      let text = e.target.result;
+      if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+      const rows = parseCsv(text);
+      if(!rows.length){ toast('CSV gol.', true); return; }
+      const header = rows[0].map(h=>h.trim().toLowerCase());
+      const idx = {
+        date: header.indexOf('date'), ticker: header.indexOf('ticker'),
+        type: header.indexOf('type'), qty: header.indexOf('qty'),
+        price: header.indexOf('price'), note: header.indexOf('note'),
+        source: header.indexOf('source'), amountEUR: header.indexOf('amounteur')
+      };
+      if(idx.date<0 || idx.ticker<0 || idx.type<0 || idx.qty<0 || idx.price<0){
+        toast('CSV invalid — lipsesc coloane obligatorii (date,ticker,type,qty,price).', true);
+        return;
+      }
+      let added = 0, skipped = 0;
+      for(let i=1;i<rows.length;i++){
+        const r = rows[i];
+        if(!r || !r.length || (r.length===1 && r[0]==='')) continue;
+        const ticker = sanitizeTicker(r[idx.ticker]);
+        const type = (r[idx.type]||'').toLowerCase().trim();
+        const date = (r[idx.date]||'').trim();
+        const qty = parseFloat(r[idx.qty]);
+        const price = parseFloat(r[idx.price]);
+        const note = idx.note>=0 ? (r[idx.note]||'') : '';
+        const source = idx.source>=0 ? (r[idx.source]||'') : '';
+        const amountEURraw = idx.amountEUR>=0 ? parseFloat(r[idx.amountEUR]) : NaN;
+        if(!ticker || !/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(qty) || qty<=0 || isNaN(price) || price<0 || (type!=='buy'&&type!=='sell')){
+          skipped++; continue;
+        }
+        const tx = { id: Date.now()+Math.random().toString(16).slice(2)+i, ticker, type, date, qty, price, note, source };
+        if(!isNaN(amountEURraw)) tx.amountEUR = amountEURraw;
+        store.tx.push(tx);
+        added++;
+      }
+      saveTxStore();
+      renderAll();
+      toast(`CSV import: ${added} transactions added${skipped?`, ${skipped} rows skipped (invalid format)`:''}.`, skipped>0 && added===0);
+    }catch(err){
+      toast('Eroare la citirea CSV: '+err.message, true);
+    }
+  };
+  reader.readAsText(file);
+  document.getElementById('csvImportInput').value = '';
+}
+
+/* =========================================================
+   COST BASIS METHOD — fixed to weighted average (avg)
+   ========================================================= */
+function deleteTx(id){
+  const t = store.tx.find(tx=>tx.id===id);
+  const label = t ? `${t.type.toUpperCase()} ${t.qty} ${t.ticker} (${t.date})` : 'this transaction';
+  if(!confirm(`Delete ${label}? This cannot be undone.`)) return;
+  store.tx = store.tx.filter(tx=>tx.id!==id);
+  saveTxStore();
+  renderAll();
+}
+
+/* =========================================================
+   HOLDINGS CALCULATION (average cost method)
+   ========================================================= */
+// method: 'avg' (cost mediu ponderat) | 'fifo' (primul intrat, primul ieșit) | 'lifo' (ultimul intrat, primul ieșit)
+// FIFO/LIFO țin loturi individuale de buy și le consumă la sell; avg amestecă tot într-un cost mediu (comportamentul original).
+function getRealHoldings(method){
+  method = method || store.settings.costBasisMethod || 'avg';
+  const byTicker = {};
+  const sorted = [...store.tx].sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+  if(method === 'avg'){
+    sorted.forEach(t=>{
+      if(!byTicker[t.ticker]) byTicker[t.ticker] = { ticker:t.ticker, qty:0, invested:0, realizedPnl:0 };
+      const h = byTicker[t.ticker];
+      if(t.type==='buy'){
+        h.qty += t.qty;
+        h.invested += t.qty * t.price;
+      } else {
+        const avgCost = h.qty > 0 ? h.invested / h.qty : 0;
+        h.realizedPnl += (t.price - avgCost) * t.qty;
+        h.invested -= avgCost * t.qty;
+        h.qty -= t.qty;
+      }
+    });
+  } else {
+    // FIFO / LIFO pe loturi
+    const lotsByTicker = {};
+    sorted.forEach(t=>{
+      if(!byTicker[t.ticker]) byTicker[t.ticker] = { ticker:t.ticker, qty:0, invested:0, realizedPnl:0 };
+      if(!lotsByTicker[t.ticker]) lotsByTicker[t.ticker] = [];
+      const h = byTicker[t.ticker];
+      const lots = lotsByTicker[t.ticker];
+      if(t.type==='buy'){
+        lots.push({ qty:t.qty, price:t.price });
+        h.qty += t.qty;
+        h.invested += t.qty * t.price;
+      } else {
+        let toSell = t.qty;
+        while(toSell > 0.0000001 && lots.length){
+          const lot = method==='fifo' ? lots[0] : lots[lots.length-1];
+          const take = Math.min(lot.qty, toSell);
+          h.realizedPnl += (t.price - lot.price) * take;
+          h.invested -= lot.price * take;
+          h.qty -= take;
+          lot.qty -= take;
+          toSell -= take;
+          if(lot.qty <= 0.0000001){
+            if(method==='fifo') lots.shift(); else lots.pop();
+          }
+        }
+        // dacă se vinde mai mult decât există loturi înregistrate, restul e tratat la cost 0 (nu ar trebui să apară în date curate)
+      }
+    });
+  }
+  return Object.values(byTicker).filter(h => h.qty > 0.0000001 || h.realizedPnl !== 0);
+}
+
+/* =========================================================
+   RENDER: DASHBOARD
+   ========================================================= */
+// Culori aproximative de brand per token, pentru graficul de alocare — unde două monede ținute
+// simultan ar avea culori prea apropiate (ex. ARB și SUI, ambele albăstrui), le diferențiem ușor
+// față de brand-ul 100% oficial, ca să rămână distinctibile vizual într-un cerc mic.
+const TICKER_COLORS = {
+  BTC:'#F7931A', ETH:'#627EEA', SOL:'#14F195', BNB:'#F0B90B', LINK:'#375BD2',
+  UNI:'#FF007A', AAVE:'#B6509E', ARB:'#28A0F0', SUI:'#5EEAD4', TRX:'#EF4444',
+  NEAR:'#00C08B', AKT:'#7B2FF7', ONDO:'#5C6BC0', OP:'#FF3EA5', HYPE:'#A78BFA',
+  ENA:'#F472B6', AUKI:'#94A3B8', CAKE:'#F5A623', INJ:'#00D2FF', SKY:'#38BDF8',
+  SYRUP:'#FCD34D', PENDLE:'#5FE3C0', GEOD:'#84CC16', TAO:'#FACC15', JUP:'#C7F284',
+  MORPHO:'#6366F1', JTO:'#818CF8', ZIG:'#F97316', SHFL:'#22D3EE', LMTS:'#A3E635',
+  BABY:'#FDA4AF', BTR:'#FB923C', AZUR:'#60A5FA', CORE:'#F97316', RLB:'#E879F9',
+  ZRO:'#38BDF8', CASH:'#C9A227'
+};
+// culori de rezervă pentru tokenii care nu au o intrare explicită mai sus — alese deterministic
+// (hash pe ticker) ca aceeași monedă să primească mereu aceeași culoare, indiferent de ordine
+const FALLBACK_COLORS = ['#8F7A2E','#9C9C9C','#E8E6DF','#4A5A73','#9C7A3C','#527A63','#DC2626','#0EA5E9','#D946EF'];
+function getColorForTicker(ticker){
+  if(TICKER_COLORS[ticker]) return TICKER_COLORS[ticker];
+  let hash = 0;
+  for(let i=0;i<ticker.length;i++) hash = (hash*31 + ticker.charCodeAt(i)) >>> 0;
+  return FALLBACK_COLORS[hash % FALLBACK_COLORS.length];
+}
+
+function renderAllocChart(holdings, totalValue){
+  const active = holdings.filter(h=>h.qty>0.0000001)
+    .sort((a,b)=> (getPrice(b.ticker)||0)*b.qty - (getPrice(a.ticker)||0)*a.qty);
+  const host = document.getElementById('allocChart');
+
+  if(!active.length){
+    host.innerHTML = '';
+    document.getElementById('allocLegend').innerHTML = '<div style="color:var(--text3);font-size:13px;">Add transactions to see your allocation.</div>';
+    return;
+  }
+  const data = active.map(h => (getPrice(h.ticker)||0)*h.qty);
+  const total = data.reduce((a,b)=>a+b,0) || 1;
+
+  // doughnut SVG nativ — fără librărie externă, funcționează garantat indiferent de mediu
+  const size=200, center=size/2, r=76, strokeW=26, circumference=2*Math.PI*r;
+  let acc=0;
+  const arcs = active.map((h,i)=>{
+    const frac = data[i]/total;
+    const dash = frac*circumference;
+    const el = `<circle cx="${center}" cy="${center}" r="${r}" fill="none" stroke="${getColorForTicker(h.ticker)}" stroke-width="${strokeW}" stroke-dasharray="${dash} ${circumference-dash}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${center} ${center})"/>`;
+    acc += dash;
+    return el;
+  }).join('');
+  host.innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">${arcs}</svg>`;
+
+  document.getElementById('allocLegend').innerHTML = active.map((h,i)=>{
+    const val = data[i];
+    const pct = totalValue>0 ? (val/totalValue*100) : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;">
+      <span style="width:9px;height:9px;border-radius:2px;background:${getColorForTicker(h.ticker)};flex-shrink:0;"></span>
+      <span style="font-family:'JetBrains Mono';font-weight:600;width:52px;">${h.ticker}</span>
+      <span style="color:var(--text2);">${fmtUSD(val)}</span>
+      <span style="color:var(--text3);margin-left:auto;">${pct.toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+}
+
+// Grupează holdings-urile pe sector (via SECTORS map) și randează un donut similar cu alocarea
+// pe tokeni — dă o imagine mai utilă a concentrării reale (ex. "40% în DeFi Lending", nu doar
+// "40% în AAVE+SYRUP separat, fiecare sub 10%").
+function renderSectorChart(holdings, totalValue){
+  const active = holdings.filter(h=>h.qty>0.0000001);
+  const host = document.getElementById('sectorChart');
+  if(!active.length){
+    host.innerHTML = '';
+    document.getElementById('sectorLegend').innerHTML = '<div style="color:var(--text3);font-size:13px;">Add transactions to see your sector breakdown.</div>';
+    return;
+  }
+  const bySector = {};
+  active.forEach(h=>{
+    const sector = SECTORS[h.ticker] || 'Neclasificat';
+    const val = (getPrice(h.ticker)||0)*h.qty;
+    bySector[sector] = (bySector[sector]||0) + val;
+  });
+  const sectors = Object.entries(bySector).sort((a,b)=>b[1]-a[1]);
+  const total = sectors.reduce((s,[,v])=>s+v,0) || 1;
+
+  const size=200, center=size/2, r=76, strokeW=26, circumference=2*Math.PI*r;
+  let acc=0;
+  const arcs = sectors.map(([sector,val])=>{
+    const frac = val/total;
+    const dash = frac*circumference;
+    const el = `<circle cx="${center}" cy="${center}" r="${r}" fill="none" stroke="${getSectorColor(sector)}" stroke-width="${strokeW}" stroke-dasharray="${dash} ${circumference-dash}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${center} ${center})"/>`;
+    acc += dash;
+    return el;
+  }).join('');
+  host.innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">${arcs}</svg>`;
+
+  document.getElementById('sectorLegend').innerHTML = sectors.map(([sector,val])=>{
+    const pct = totalValue>0 ? (val/totalValue*100) : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;">
+      <span style="width:9px;height:9px;border-radius:2px;background:${getSectorColor(sector)};flex-shrink:0;"></span>
+      <span style="flex:1;">${sector}</span>
+      <span style="color:var(--text2);">${fmtUSD(val)}</span>
+      <span style="color:var(--text3);margin-left:8px;">${pct.toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+}
+
+// Compară My portfolio (actual %) cu portofoliul țintă selectat (P1/P2/P3), inclusiv tokenii
+// din target neținuți încă (actual 0%) sau ținuți dar absenți din target (target 0%, sugestie
+// implicită de reducere). "Delta (buy/sell)" e suma în USD necesară ca să ajungi exact la target,
+// calculată pe valoarea totală curentă a My portfolio (nu include CASH ca holding real).
+let rebalanceSort = { by:'targetPct', dir:'desc' };
+function setRebalanceSort(col){
+  if(rebalanceSort.by === col){ rebalanceSort.dir = rebalanceSort.dir==='asc' ? 'desc' : 'asc'; }
+  else { rebalanceSort.by = col; rebalanceSort.dir = 'desc'; }
+  renderRebalance();
+}
+function updateRebalanceSortHeaders(){
+  const cols = { ticker:'rbthToken', targetPct:'rbthTarget', actualPct:'rbthActual', deltaPct:'rbthDelta', deltaUsd:'rbthDeltaUsd' };
+  const labels = { ticker:'Token', targetPct:'Target %', actualPct:'Actual %', deltaPct:'Delta %', deltaUsd:'Delta (buy/sell)' };
+  Object.entries(cols).forEach(([col,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const arrow = rebalanceSort.by===col ? (rebalanceSort.dir==='asc' ? ' ↑' : ' ↓') : '';
+    el.textContent = labels[col] + arrow;
+  });
+}
+
+function renderRebalance(){
+  updateRebalanceSortHeaders();
+  const selectEl = document.getElementById('rebalanceTarget');
+  const targetId = selectEl.value;
+  const target = store.portfolios.find(p=>p.id===targetId);
+  const tbody = document.getElementById('rebalanceTable');
+  if(!target){ tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text3);">Target portfolio not found.</td></tr>'; return; }
+
+  const holdings = getRealHoldings().filter(h=>h.qty>0.0000001);
+  const totalValue = holdings.reduce((s,h)=>s+(getPrice(h.ticker)||0)*h.qty, 0);
+  const actualByTicker = {};
+  holdings.forEach(h=>{ actualByTicker[h.ticker] = (getPrice(h.ticker)||0)*h.qty; });
+
+  const tickers = new Set([...target.tokens.map(t=>t.t), ...Object.keys(actualByTicker)]);
+  const rows = [...tickers].map(ticker=>{
+    const targetPct = (target.tokens.find(t=>t.t===ticker)||{}).pct || 0;
+    const actualVal = actualByTicker[ticker] || 0;
+    const actualPct = totalValue>0 ? actualVal/totalValue*100 : 0;
+    const deltaPct = actualPct - targetPct;
+    const deltaUsd = ticker==='CASH' ? null : (targetPct/100*totalValue) - actualVal;
+    return {ticker, targetPct, actualPct, deltaPct, deltaUsd};
+  });
+
+  const dir = rebalanceSort.dir==='asc' ? 1 : -1;
+  rows.sort((a,b)=>{
+    switch(rebalanceSort.by){
+      case 'ticker': return a.ticker.localeCompare(b.ticker)*dir;
+      case 'actualPct': return (a.actualPct-b.actualPct)*dir;
+      case 'deltaPct': return (a.deltaPct-b.deltaPct)*dir;
+      case 'deltaUsd': return ((a.deltaUsd??0)-(b.deltaUsd??0))*dir;
+      case 'targetPct': default: return (a.targetPct-b.targetPct)*dir;
+    }
+  });
+
+  tbody.innerHTML = rows.map(r=>{
+    const deltaCls = Math.abs(r.deltaPct) < 1 ? '' : (r.deltaPct > 0 ? 'neg' : 'pos'); // peste target = neg (de vândut), sub target = pos (de cumpărat)
+    return `<tr>
+      <td class="tok-ticker">${r.ticker}</td>
+      <td class="num">${r.targetPct.toFixed(1)}%</td>
+      <td class="num">${r.actualPct.toFixed(1)}%</td>
+      <td class="num ${deltaCls}">${r.deltaPct>=0?'+':''}${r.deltaPct.toFixed(1)}%</td>
+      <td class="num ${r.deltaUsd===null?'':(r.deltaUsd>=0?'pos':'neg')}">${r.deltaUsd===null ? '—' : (r.deltaUsd>=0 ? '+'+fmtUSD(r.deltaUsd)+' buy' : fmtUSD(Math.abs(r.deltaUsd))+' sell')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderEvoChart(){
+  const host = document.getElementById('evoChart');
+  if(store.snapshots.length < 2){
+    host.innerHTML = '<div style="color:var(--text3);font-size:12.5px;padding-top:30px;">Not enough data yet for the evolution chart (minimum 2 price refreshes).</div>';
+    return;
+  }
+  // linie SVG nativă — fără librărie externă
+  const w=800, h=140, pad=8;
+  const values = store.snapshots.map(s=>s.value);
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max-min) || 1;
+  const stepX = values.length>1 ? (w-2*pad)/(values.length-1) : 0;
+  const pts = values.map((v,i)=>{
+    const x = pad + i*stepX;
+    const y = h-pad - ((v-min)/range)*(h-2*pad);
+    return [x,y];
+  });
+  const lineStr = pts.map(p=>p.join(',')).join(' ');
+  const areaStr = `${pad},${h-pad} ` + lineStr + ` ${pad+(values.length-1)*stepX},${h-pad}`;
+  host.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" preserveAspectRatio="none">
+    <polygon points="${areaStr}" fill="rgba(201,162,39,0.10)"/>
+    <polyline points="${lineStr}" fill="none" stroke="#C9A227" stroke-width="2" vector-effect="non-scaling-stroke"/>
+  </svg>`;
+}
+
+// Grafic cu bare orizontale — P&L procentual per token, sortat de la cel mai bun la cel mai
+// slab. Ajută la identificarea rapidă a câștigătorilor/pierzătorilor din portofoliu, ceva ce
+// tabelul de holdings nu arată dintr-o privire (acolo trebuie citită fiecare linie).
+function renderPnlChart(holdings){
+  const host = document.getElementById('pnlChart');
+  const active = holdings.filter(h=>h.qty>0.0000001 && h.invested>0);
+  if(!active.length){
+    host.innerHTML = '<div style="color:var(--text3);font-size:13px;">Add transactions to see P&L by token.</div>';
+    return;
+  }
+  const rows = active.map(h=>{
+    const price = getPrice(h.ticker);
+    const value = (price||0)*h.qty;
+    const pnl = value - h.invested;
+    const pnlPct = pnl/h.invested*100;
+    return {ticker:h.ticker, pnl, pnlPct};
+  }).sort((a,b)=> b.pnlPct - a.pnlPct);
+
+  const maxAbs = Math.max(...rows.map(r=>Math.abs(r.pnlPct)), 1);
+
+  host.innerHTML = rows.map(r=>{
+    const widthPct = (Math.abs(r.pnlPct)/maxAbs*100).toFixed(1);
+    const cls = r.pnl>=0 ? 'pos' : 'neg';
+    const color = r.pnl>=0 ? 'var(--pos)' : 'var(--neg)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;">
+      <span style="font-family:'JetBrains Mono';font-weight:600;width:52px;flex-shrink:0;">${r.ticker}</span>
+      <div style="flex:1;background:rgba(255,255,255,.05);border-radius:3px;height:14px;position:relative;overflow:hidden;">
+        <div style="width:${widthPct}%;height:100%;background:${color};border-radius:3px;"></div>
+      </div>
+      <span class="${cls}" style="font-family:'JetBrains Mono';width:90px;text-align:right;flex-shrink:0;">${fmtPct(r.pnlPct)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* =========================================================
+   RENDER: REAL PORTFOLIO TABLE
+   ========================================================= */
+let realSort = { by:'value', dir:'desc' };
+function setRealSort(col){
+  if(realSort.by === col){ realSort.dir = realSort.dir==='asc' ? 'desc' : 'asc'; }
+  else { realSort.by = col; realSort.dir = 'desc'; }
+  renderReal();
+}
+function updateRealSortHeaders(){
+  const cols = { ticker:'rthToken', qty:'rthQty', avgCost:'rthAvg', price:'rthPrice', value:'rthValue', pnl:'rthPnl' };
+  const labels = { ticker:'Token', qty:'Quantity', avgCost:'Avg cost', price:'Current price', value:'Value', pnl:'Unrealised P&L' };
+  Object.entries(cols).forEach(([col,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const arrow = realSort.by===col ? (realSort.dir==='asc' ? ' ↑' : ' ↓') : '';
+    el.textContent = labels[col] + arrow;
+  });
+}
+
+function renderReal(){
+  updateRealSortHeaders();
+  const allHoldings = getRealHoldings();
+  const holdings = allHoldings.filter(h=>h.qty>0.0000001).map(h=>{
+    const price = getPrice(h.ticker);
+    const avgCost = h.qty>0 ? h.invested/h.qty : 0;
+    const value = (price||0)*h.qty;
+    const pnl = value - h.invested;
+    return {...h, _price:price, _avgCost:avgCost, _value:value, _pnl:pnl};
+  });
+  const dir = realSort.dir==='asc' ? 1 : -1;
+  holdings.sort((a,b)=>{
+    switch(realSort.by){
+      case 'ticker': return a.ticker.localeCompare(b.ticker)*dir;
+      case 'qty': return (a.qty-b.qty)*dir;
+      case 'avgCost': return (a._avgCost-b._avgCost)*dir;
+      case 'price': return ((a._price||0)-(b._price||0))*dir;
+      case 'pnl': return (a._pnl-b._pnl)*dir;
+      case 'value': default: return (a._value-b._value)*dir;
+    }
+  });
+
+  let totalValue = 0, totalInvested = 0, totalRealized = 0;
+  allHoldings.forEach(h=>{
+    const price = getPrice(h.ticker);
+    if(h.qty > 0){
+      totalValue += (price||0) * h.qty;
+      totalInvested += h.invested;
+    }
+    totalRealized += h.realizedPnl;
+  });
+  const unrealizedPnl = totalValue - totalInvested;
+  const pnlPct = totalInvested > 0 ? (unrealizedPnl/totalInvested*100) : 0;
+  const investedEUR = getTotalInvestedEUR();
+
+  const cards = [
+    {label:'Total balance', value: fmtUsdEur(totalValue)},
+    {label:'Total invested', value: fmtUsdCustomEur(totalInvested, investedEUR.total)},
+    {label:'Unrealised P&L', value: fmtUsdEur(unrealizedPnl), delta: fmtPct(pnlPct), cls: unrealizedPnl>=0?'pos':'neg'},
+    {label:'Realised P&L', value: fmtUsdEur(totalRealized), cls: totalRealized>=0?'pos':'neg'},
+    {label:'Active positions', value: holdings.length},
+  ];
+  document.getElementById('realCards').innerHTML = cards.map(c=>`
+    <div class="card" style="position:relative;">
+      ${c.label==='Total balance' ? `<button onclick="refreshAllPrices()" title="Refresh prices" style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;line-height:1;padding:2px;">↻</button>` : ''}
+      <div class="card-label">${c.label}</div>
+      <div class="card-value ${c.cls||''}">${c.value}</div>
+      ${c.delta ? `<div class="card-delta ${c.cls||''}">${c.delta}</div>` : ''}
+    </div>`).join('')
+    + (store.fxRateIsLive ? '' : `<div style="grid-column:1/-1;font-size:11px;color:var(--text3);margin-top:-4px;">Approximate EUR rate (${getFxRate().toFixed(2)}), not live-updated — CoinGecko source hasn't been reachable yet in this environment.</div>`);
+
+  renderAllocChart(holdings, totalValue);
+  renderEvoChart();
+  renderPnlChart(holdings);
+  renderSectorChart(holdings, totalValue);
+  renderRebalance();
+
+  const tbody = document.getElementById('realTable');
+  document.getElementById('realEmpty').style.display = holdings.length ? 'none' : 'block';
+  tbody.innerHTML = holdings.map(h=>{
+    const price = getPrice(h.ticker);
+    const avgCost = h.qty>0 ? h.invested/h.qty : 0;
+    const value = (price||0)*h.qty;
+    const pnl = value - h.invested;
+    const pnlPct = h.invested>0 ? pnl/h.invested*100 : 0;
+    const manual = isManualPrice(h.ticker);
+    return `<tr>
+      <td><div class="tok"><span class="tok-ticker">${h.ticker}</span></div></td>
+      <td class="num">${h.qty.toLocaleString('ro-RO',{maximumFractionDigits:6})}</td>
+      <td class="num">${fmtUSD(avgCost)}</td>
+      <td class="num" style="${manual?'background:rgba(201,162,39,.12);border-radius:5px;':''}">
+        <span style="cursor:pointer;" onclick="promptManualPrice('${h.ticker}')" title="Click to edit the manual price">${price!==null ? fmtUSD(price) : '<span style="color:var(--text3);">— (set manually)</span>'}</span>
+      </td>
+      <td class="num">${fmtUSD(value)}</td>
+      <td class="num ${pnl>=0?'pos':'neg'}">${fmtUSD(pnl)} <span style="opacity:.7;">(${fmtPct(pnlPct)})</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm" onclick="filterTxByTicker('${h.ticker}')">transactions</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function promptManualPrice(ticker){
+  const current = store.manualPrices[ticker];
+  const val = prompt(`Manual price for ${ticker} (USD) — leave empty to go back to the API price:`, current!==undefined ? current : '');
+  if(val===null) return; // anulat
+  setManualPrice(ticker, val.trim());
+  toast(val.trim()==='' ? `Manual price removed for ${ticker}, back to API price.` : `Manual price set: ${ticker} = ${val.trim()} USD`);
+}
+
+/* =========================================================
+   TRANSACTIONS — filtrare & sortare
+   ========================================================= */
+let txFilter = { ticker:'', type:'all', sortBy:'date', sortDir:'desc' };
+let txFilterTimeout = null;
+
+function handleTxFilterInput(val){
+  clearTimeout(txFilterTimeout);
+  txFilterTimeout = setTimeout(()=>{
+    txFilter.ticker = val.toUpperCase().trim();
+    renderTx();
+  }, 150);
+}
+function setTxFilterType(val){
+  txFilter.type = val;
+  renderTx();
+}
+function clearTxFilter(){
+  txFilter = { ticker:'', type:'all', sortBy:'date', sortDir:'desc' };
+  document.getElementById('txFilterTicker').value = '';
+  document.getElementById('txFilterType').value = 'all';
+  renderTx();
+}
+function setTxSort(col){
+  if(txFilter.sortBy === col){
+    txFilter.sortDir = txFilter.sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    txFilter.sortBy = col;
+    txFilter.sortDir = col==='date' ? 'desc' : 'asc';
+  }
+  renderTx();
+}
+function updateTxSortHeaders(){
+  const cols = { date:'thDate', ticker:'thTicker', type:'thType', qty:'thQty', price:'thPrice', total:'thTotal' };
+  const labels = { date:'Date', ticker:'Token', type:'Type', qty:'Quantity', price:'Price (USD)', total:'Total (USD)' };
+  Object.entries(cols).forEach(([col,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const arrow = txFilter.sortBy===col ? (txFilter.sortDir==='asc' ? ' ↑' : ' ↓') : '';
+    el.textContent = labels[col] + arrow;
+  });
+}
+
+function filterTxByTicker(ticker){
+  txFilter.ticker = ticker;
+  document.querySelector('.navbtn[data-page="tx"]').click();
+  const input = document.getElementById('txFilterTicker');
+  if(input) input.value = ticker;
+  renderTx();
+}
+
+/* =========================================================
+   RENDER: TRANSACTIONS TABLE
+   ========================================================= */
+function renderTx(){
+  updateTxSortHeaders();
+  let rows = [...store.tx];
+  if(txFilter.ticker) rows = rows.filter(t=>t.ticker.toUpperCase().includes(txFilter.ticker));
+  if(txFilter.type !== 'all') rows = rows.filter(t=>t.type===txFilter.type);
+
+  const dir = txFilter.sortDir === 'asc' ? 1 : -1;
+  rows.sort((a,b)=>{
+    let av, bv;
+    switch(txFilter.sortBy){
+      case 'ticker': av=a.ticker; bv=b.ticker; return av.localeCompare(bv)*dir;
+      case 'type': av=a.type; bv=b.type; return av.localeCompare(bv)*dir;
+      case 'qty': av=a.qty; bv=b.qty; return (av-bv)*dir;
+      case 'price': av=a.price; bv=b.price; return (av-bv)*dir;
+      case 'total': av=a.qty*a.price; bv=b.qty*b.price; return (av-bv)*dir;
+      case 'date': default: av=new Date(a.date); bv=new Date(b.date); return (av-bv)*dir;
+    }
+  });
+
+  const tbody = document.getElementById('txTable');
+  document.getElementById('txEmpty').style.display = rows.length ? 'none' : 'block';
+  tbody.innerHTML = rows.map(t=>`
+    <tr>
+      <td class="mono">${t.date}</td>
+      <td class="tok-ticker">${t.ticker}</td>
+      <td><span style="color:${t.type==='buy'?'var(--pos)':'var(--neg)'};text-transform:uppercase;font-size:12px;font-weight:600;">${t.type}</span></td>
+      <td class="num">${t.qty}</td>
+      <td class="num">${fmtUSD(t.price)}</td>
+      <td class="num">${fmtUSD(t.qty*t.price)}</td>
+      <td style="color:var(--text3);font-size:12.5px;">${t.source ? escapeHtml(t.source) : '—'}</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="deleteTx('${t.id}')">delete</button></td>
+    </tr>`).join('');
+}
+
+/* =========================================================
+   WATCHLIST — tokeni ACCEPT/WATCH din VERDICTS, neținuți încă
+   ========================================================= */
+let watchlistSort = { by:'verdict', dir:'asc' };
+function setWatchlistSort(col){
+  if(watchlistSort.by === col){ watchlistSort.dir = watchlistSort.dir==='asc' ? 'desc' : 'asc'; }
+  else { watchlistSort.by = col; watchlistSort.dir = 'asc'; }
+  renderWatchlist();
+}
+function updateWatchlistSortHeaders(){
+  const cols = { ticker:'wlthToken', verdict:'wlthVerdict', sector:'wlthSector', price:'wlthPrice' };
+  const labels = { ticker:'Token', verdict:'Verdict', sector:'Sector', price:'Price' };
+  Object.entries(cols).forEach(([col,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const arrow = watchlistSort.by===col ? (watchlistSort.dir==='asc' ? ' ↑' : ' ↓') : '';
+    el.textContent = labels[col] + arrow;
+  });
+}
+
+function renderWatchlist(){
+  updateWatchlistSortHeaders();
+  const tbody = document.getElementById('watchlistTable');
+  const held = new Set(getRealHoldings().filter(h=>h.qty>0.0000001).map(h=>h.ticker));
+  const verdictOrder = {ACCEPT:0, WATCH:1};
+  const entries = Object.entries(VERDICTS).filter(([t,v])=> t!=='CASH' && v!=='REJECT' && !held.has(t));
+  const dir = watchlistSort.dir==='asc' ? 1 : -1;
+  entries.sort((a,b)=>{
+    switch(watchlistSort.by){
+      case 'ticker': return a[0].localeCompare(b[0])*dir;
+      case 'sector': return (SECTORS[a[0]]||'').localeCompare(SECTORS[b[0]]||'')*dir;
+      case 'price': return ((getPrice(a[0])??-1)-(getPrice(b[0])??-1))*dir;
+      case 'verdict': default: return ((verdictOrder[a[1]]??2)-(verdictOrder[b[1]]??2))*dir || a[0].localeCompare(b[0]);
+    }
+  });
+  if(!entries.length){
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text3);">Every ACCEPT/WATCH token is already in My portfolio.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = entries.map(([ticker,verdict])=>{
+    const price = getPrice(ticker);
+    const sector = SECTORS[ticker] || '—';
+    const badgeColor = verdict==='ACCEPT' ? 'var(--pos)' : 'var(--gold)';
+    return `<tr>
+      <td class="tok-ticker">${ticker}</td>
+      <td><span style="color:${badgeColor};font-weight:600;font-size:12px;">${verdict}</span></td>
+      <td style="color:var(--text3);font-size:12.5px;">${sector}</td>
+      <td class="num">${price!==null ? fmtUSD(price) : '—'}</td>
+      <td style="text-align:right;"><button class="btn btn-sm" onclick="openTxModal(); document.getElementById('txTicker').value='${ticker}'; handleTickerSearch('${ticker}');">+ add</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// Rezolvă (dacă lipsesc din tickerMap) și aduce prețuri live pentru toți tokenii din VERDICTS
+// (exceptând CASH și REJECT), ca watchlist-ul să aibă preț chiar și pentru tokeni nemapați încă.
+async function refreshWatchlistPrices(){
+  const candidates = Object.entries(VERDICTS).filter(([t,v])=> t!=='CASH' && v!=='REJECT').map(([t])=>t);
+  const unmapped = candidates.filter(t=>!store.tickerMap[t]);
+  let resolvedAny = false;
+  for(const ticker of unmapped){
+    const results = await resolveTicker(ticker);
+    if(results === null){
+      toast('Could not reach CoinGecko from this environment. Open the downloaded file directly in a browser for live prices.', true);
+      return;
+    }
+    if(results.length){
+      const exact = results.find(c => (c.symbol||'').toUpperCase() === ticker);
+      store.tickerMap[ticker] = (exact || results[0]).id;
+      resolvedAny = true;
+    }
+  }
+  if(resolvedAny) saveMapStore();
+  const ok = await refreshAllPrices();
+  if(ok) renderWatchlist();
+}
+
+/* =========================================================
+   MARKETS — browser complet al pieței (rank #1 → ultimul), gen CoinMarketCap.
+   Paginare (100/pagină) prin CoinGecko /coins/markets; căutare separată prin /search.
+   ========================================================= */
+let marketsState = { page:1, totalCoins:null, searchTerm:'', searchTimeout:null, lastCoins:[] };
+let marketsSort = { by:'rank', dir:'asc' };
+function setMarketsSort(col){
+  if(marketsSort.by === col){ marketsSort.dir = marketsSort.dir==='asc' ? 'desc' : 'asc'; }
+  else { marketsSort.by = col; marketsSort.dir = col==='coin' ? 'asc' : 'desc'; }
+  renderMarketsTable(marketsState.lastCoins);
+}
+function updateMarketsSortHeaders(){
+  const cols = { rank:'mkthRank', coin:'mkthCoin', price:'mkthPrice', chg:'mkthChg', mcap:'mkthMcap' };
+  const labels = { rank:'#', coin:'Coin', price:'Price', chg:'24h %', mcap:'Market Cap' };
+  Object.entries(cols).forEach(([col,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const arrow = marketsSort.by===col ? (marketsSort.dir==='asc' ? ' ↑' : ' ↓') : '';
+    el.textContent = labels[col] + arrow;
+  });
+}
+
+async function loadMarketsPage(page){
+  if(page < 1) page = 1;
+  marketsState.page = page;
+  marketsState.searchTerm = '';
+  const searchInput = document.getElementById('marketsSearch');
+  if(searchInput) searchInput.value = '';
+
+  const statusEl = document.getElementById('marketsStatus');
+  const tbody = document.getElementById('marketsTable');
+  statusEl.textContent = 'Loading...';
+  document.getElementById('marketsPrevBtn').disabled = true;
+  document.getElementById('marketsNextBtn').disabled = true;
+
+  try{
+    // total_market_cap ranking count — cerut o singură dată, ca să știm câte pagini există (afișare informativă)
+    if(marketsState.totalCoins === null){
+      try{
+        const globalRes = await fetch('https://api.coingecko.com/api/v3/global');
+        if(globalRes.ok){
+          const g = await globalRes.json();
+          marketsState.totalCoins = g?.data?.active_cryptocurrencies || null;
+        }
+      }catch(e){ /* opțional, nu blocăm paginarea dacă asta eșuează */ }
+    }
+
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=${page}&price_change_percentage=24h`);
+    if(!res.ok) throw new Error('http '+res.status);
+    const coins = await res.json();
+    renderMarketsTable(coins);
+
+    const totalPages = marketsState.totalCoins ? Math.ceil(marketsState.totalCoins/100) : null;
+    statusEl.textContent = totalPages
+      ? `Showing rank ${(page-1)*100+1}–${(page-1)*100+coins.length} of ~${marketsState.totalCoins.toLocaleString('en-US')} coins tracked by CoinGecko.`
+      : `Showing rank ${(page-1)*100+1}–${(page-1)*100+coins.length}.`;
+    document.getElementById('marketsPageLabel').textContent = `Page ${page}${totalPages?' / '+totalPages:''}`;
+    document.getElementById('marketsPrevBtn').disabled = page<=1;
+    document.getElementById('marketsNextBtn').disabled = coins.length < 100;
+  }catch(e){
+    statusEl.textContent = '';
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--neg);">Could not reach CoinGecko from this environment (${e.message}). Open the downloaded file directly in a browser for live market data.</td></tr>`;
+    document.getElementById('marketsPageLabel').textContent = '';
+  }
+}
+
+function renderMarketsTable(coins){
+  updateMarketsSortHeaders();
+  marketsState.lastCoins = coins;
+  const tbody = document.getElementById('marketsTable');
+  if(!coins.length){
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text3);">No results.</td></tr>';
+    return;
+  }
+  const dir = marketsSort.dir==='asc' ? 1 : -1;
+  const sorted = [...coins].sort((a,b)=>{
+    switch(marketsSort.by){
+      case 'coin': return (a.name||'').localeCompare(b.name||'')*dir;
+      case 'price': return ((a.current_price??-1)-(b.current_price??-1))*dir;
+      case 'chg': return ((a.price_change_percentage_24h??-1e18)-(b.price_change_percentage_24h??-1e18))*dir;
+      case 'mcap': return ((a.market_cap??-1)-(b.market_cap??-1))*dir;
+      case 'rank': default: return ((a.market_cap_rank??1e9)-(b.market_cap_rank??1e9))*dir;
+    }
+  });
+  tbody.innerHTML = sorted.map(c=>{
+    const chg = c.price_change_percentage_24h;
+    const chgCls = chg==null ? '' : (chg>=0 ? 'pos' : 'neg');
+    const symbol = (c.symbol||'').toUpperCase();
+    return `<tr>
+      <td class="num">${c.market_cap_rank ?? '—'}</td>
+      <td><span class="tok-ticker">${escapeHtml(symbol)}</span> <span style="color:var(--text3);font-size:12px;">${escapeHtml(c.name||'')}</span></td>
+      <td class="num">${c.current_price!=null ? fmtUSD(c.current_price) : '—'}</td>
+      <td class="num ${chgCls}">${chg!=null ? fmtPct(chg) : '—'}</td>
+      <td class="num" style="color:var(--text2);">${c.market_cap!=null ? '$'+Math.round(c.market_cap).toLocaleString('en-US') : '—'}</td>
+      <td style="text-align:right;"><button class="btn btn-sm" onclick="quickMapAndAdd('${stripQuotes(symbol)}','${stripQuotes(c.id)}')">+ add</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function handleMarketsSearch(val){
+  clearTimeout(marketsState.searchTimeout);
+  const q = val.trim();
+  marketsState.searchTerm = q;
+  if(!q){ loadMarketsPage(marketsState.page); return; }
+  marketsState.searchTimeout = setTimeout(async ()=>{
+    const statusEl = document.getElementById('marketsStatus');
+    const tbody = document.getElementById('marketsTable');
+    statusEl.textContent = 'Searching...';
+    document.getElementById('marketsPrevBtn').disabled = true;
+    document.getElementById('marketsNextBtn').disabled = true;
+    document.getElementById('marketsPageLabel').textContent = '';
+    try{
+      const res = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(q)}`);
+      if(!res.ok) throw new Error('http '+res.status);
+      const data = await res.json();
+      const ids = (data.coins||[]).slice(0,20).map(c=>c.id);
+      if(!ids.length){
+        statusEl.textContent = `No matches for "${q}".`;
+        tbody.innerHTML = '';
+        return;
+      }
+      const marketsRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids.join(',')}&order=market_cap_desc&price_change_percentage=24h`);
+      if(!marketsRes.ok) throw new Error('http '+marketsRes.status);
+      const coins = await marketsRes.json();
+      renderMarketsTable(coins);
+      statusEl.textContent = `${coins.length} result${coins.length===1?'':'s'} for "${q}".`;
+    }catch(e){
+      statusEl.textContent = '';
+      tbody.innerHTML = `<tr><td colspan="6" style="color:var(--neg);">Search failed (${e.message}).</td></tr>`;
+    }
+  }, 400);
+}
+
+// Mapează rapid un ticker (dacă nu era deja) la id-ul CoinGecko confirmat din Markets/căutare,
+// apoi deschide modalul de adăugare tranzacție — util ca să treci direct de la "văd moneda" la
+// "o adaug în My portfolio", fără să mai treci prin fluxul de căutare din modal.
+function quickMapAndAdd(ticker, id){
+  ticker = sanitizeTicker(ticker);
+  if(ticker && id){ store.tickerMap[ticker] = id; saveMapStore(); }
+  openTxModal();
+  document.getElementById('txTicker').value = ticker;
+  pendingTicker = ticker;
+  document.getElementById('tickerConfirmed').textContent = `✓ ${ticker} → ${id} (from Markets)`;
+}
+
+/* =========================================================
+   RISK / ANALYTICS
+   ========================================================= */
+// Concentrare (HHI) — calculabilă instant din holdings curente, fără fetch extern.
+// HHI = suma pătratelor ponderilor (0-1 scale, aici *10000 ca la standardul economic).
+// <1500 = neconcentrat, 1500-2500 = concentrare moderată, >2500 = concentrare ridicată.
+function renderConcentration(){
+  const holdings = getRealHoldings().filter(h=>h.qty>0.0000001);
+  const totalValue = holdings.reduce((s,h)=>s+(getPrice(h.ticker)||0)*h.qty, 0);
+  const weighted = holdings.map(h=>({
+    ticker: h.ticker,
+    val: (getPrice(h.ticker)||0)*h.qty,
+    pct: totalValue>0 ? (getPrice(h.ticker)||0)*h.qty/totalValue*100 : 0
+  })).sort((a,b)=>b.pct-a.pct);
+
+  const hhi = weighted.reduce((s,h)=> s + Math.pow(h.pct,2), 0); // pct e deja 0-100, deci suma pătratelor e direct pe scala HHI standard (0-10000)
+  const top3 = weighted.slice(0,3).reduce((s,h)=>s+h.pct,0);
+  const top5 = weighted.slice(0,5).reduce((s,h)=>s+h.pct,0);
+  const hhiLabel = hhi<1500 ? 'Low' : hhi<2500 ? 'Moderate' : 'High';
+  const hhiCls = hhi<1500 ? 'pos' : hhi<2500 ? '' : 'neg';
+
+  document.getElementById('concentrationCards').innerHTML = [
+    {label:'Top 3 holdings', value: top3.toFixed(1)+'%'},
+    {label:'Top 5 holdings', value: top5.toFixed(1)+'%'},
+    {label:'HHI concentration', value: Math.round(hhi), delta: hhiLabel, cls: hhiCls},
+    {label:'Positions', value: weighted.length},
+  ].map(c=>`
+    <div class="card">
+      <div class="card-label">${c.label}</div>
+      <div class="card-value ${c.cls||''}">${c.value}</div>
+      ${c.delta ? `<div class="card-delta ${c.cls||''}">${c.delta}</div>` : ''}
+    </div>`).join('');
+
+  document.getElementById('concentrationBars').innerHTML = weighted.map(h=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;">
+      <span style="font-family:'JetBrains Mono';font-weight:600;width:52px;flex-shrink:0;">${h.ticker}</span>
+      <div style="flex:1;background:rgba(255,255,255,.05);border-radius:3px;height:14px;position:relative;overflow:hidden;">
+        <div style="width:${Math.min(h.pct,100).toFixed(1)}%;height:100%;background:${getColorForTicker(h.ticker)};border-radius:3px;"></div>
+      </div>
+      <span style="font-family:'JetBrains Mono';width:60px;text-align:right;flex-shrink:0;color:var(--text2);">${h.pct.toFixed(1)}%</span>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:13px;">Add transactions to see concentration.</div>';
+}
+
+// Corelație și beta vs BTC — fetch on-demand de date istorice (90 zile, CoinGecko), la fel ca
+// vechiul DCA calculator. Rulează doar la click, nu automat, ca să nu bată API-ul degeaba.
+async function runRiskAnalysis(){
+  const resultEl = document.getElementById('riskAnalysisResult');
+  const holdings = getRealHoldings().filter(h=>h.qty>0.0000001 && h.ticker!=='BTC');
+  if(!holdings.length){
+    resultEl.innerHTML = '<div style="color:var(--text3);font-size:13px;">Add non-BTC holdings to compare against BTC.</div>';
+    return;
+  }
+  resultEl.innerHTML = '<div style="color:var(--text3);">Calculating (fetching ~90 days of daily prices per token)...</div>';
+
+  async function fetchDailyCloses(id){
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=90&interval=daily`);
+    if(!res.ok) throw new Error('http '+res.status);
+    const data = await res.json();
+    return (data.prices||[]).map(p=>p[1]);
+  }
+  function dailyReturns(closes){
+    const r = [];
+    for(let i=1;i<closes.length;i++) r.push((closes[i]-closes[i-1])/closes[i-1]);
+    return r;
+  }
+  function correlation(x,y){
+    const n = Math.min(x.length,y.length);
+    if(n<2) return null;
+    x=x.slice(-n); y=y.slice(-n);
+    const mx=x.reduce((a,b)=>a+b,0)/n, my=y.reduce((a,b)=>a+b,0)/n;
+    let cov=0, vx=0, vy=0;
+    for(let i=0;i<n;i++){ cov += (x[i]-mx)*(y[i]-my); vx += (x[i]-mx)**2; vy += (y[i]-my)**2; }
+    if(vx===0||vy===0) return null;
+    return cov/Math.sqrt(vx*vy);
+  }
+  function beta(x,y){ // beta of y vs x (x=BTC returns, y=token returns)
+    const n = Math.min(x.length,y.length);
+    if(n<2) return null;
+    x=x.slice(-n); y=y.slice(-n);
+    const mx=x.reduce((a,b)=>a+b,0)/n;
+    let cov=0, vx=0;
+    for(let i=0;i<n;i++){ cov += (x[i]-mx)*(y[i]-y.reduce((a,b)=>a+b,0)/n); vx += (x[i]-mx)**2; }
+    if(vx===0) return null;
+    return cov/vx;
+  }
+
+  try{
+    const btcId = store.tickerMap['BTC'];
+    if(!btcId) throw new Error('BTC not mapped');
+    const btcCloses = await fetchDailyCloses(btcId);
+    const btcReturns = dailyReturns(btcCloses);
+
+    const rows = [];
+    for(const h of holdings){
+      const id = store.tickerMap[h.ticker];
+      if(!id){ rows.push({ticker:h.ticker, err:'not mapped to CoinGecko id'}); continue; }
+      try{
+        const closes = await fetchDailyCloses(id);
+        const returns = dailyReturns(closes);
+        const corr = correlation(btcReturns, returns);
+        const b = beta(btcReturns, returns);
+        rows.push({ticker:h.ticker, corr, beta:b});
+      }catch(e){
+        rows.push({ticker:h.ticker, err:e.message});
+      }
+    }
+
+    resultEl.innerHTML = `<table><thead><tr><th>Token</th><th class="num">Correlation vs BTC</th><th class="num">Beta vs BTC</th></tr></thead><tbody>` +
+      rows.map(r=>{
+        if(r.err) return `<tr><td class="tok-ticker">${r.ticker}</td><td colspan="2" style="color:var(--text3);">${r.err}</td></tr>`;
+        return `<tr>
+          <td class="tok-ticker">${r.ticker}</td>
+          <td class="num">${r.corr!==null ? r.corr.toFixed(2) : '—'}</td>
+          <td class="num ${r.beta!==null && r.beta>1 ? 'neg' : ''}">${r.beta!==null ? r.beta.toFixed(2) : '—'}</td>
+        </tr>`;
+      }).join('') + `</tbody></table>
+      <div style="margin-top:10px;font-size:11px;color:var(--text3);">Beta >1 = amplifies BTC moves (more volatile than BTC). Based on 90 days of daily returns — a short window, treat as directional, not precise.</div>`;
+  }catch(e){
+    resultEl.innerHTML = `<div style="color:var(--neg);">Could not fetch historical data (${e.message}). Could be a CoinGecko rate limit or no API access in this environment — try opening the downloaded file directly in a browser.</div>`;
+  }
+}
+
+/* =========================================================
+   RENDER: TARGET PORTFOLIOS (dinamice — CRUD complet)
+   ========================================================= */
+function renderPortfolioNav(){
+  const host = document.getElementById('navPortfolios');
+  const currentActivePage = document.querySelector('.page.active') ? document.querySelector('.page.active').id.replace('page-','') : null;
+  host.innerHTML = store.portfolios.map(p=>
+    `<button class="navbtn" data-page="${p.id}"><span class="dot"></span>${escapeHtml(p.label)}</button>`
+  ).join('');
+  // păstrează starea activă dacă pagina curentă încă există; altfel nu schimbă nimic aici (o face caller-ul)
+  if(currentActivePage && store.portfolios.some(p=>p.id===currentActivePage)){
+    const btn = document.querySelector(`.navbtn[data-page="${currentActivePage}"]`);
+    if(btn) btn.classList.add('active');
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Tickerul e injectat direct (fără escapeHtml) în zeci de locuri din UI — inclusiv în interiorul
+// unor atribute onclick="fn('${ticker}')", unde un singur apostrof ar rupe atributul și ar permite
+// injectare de JS. Cripto tickers sunt prin definiție alfanumerice; sanitizăm la sursă (o singură
+// funcție, apelată la fiecare punct de intrare: modal manual, CSV import, add token în portofoliu),
+// în loc să încercăm să escapăm corect fiecare din zecile de locuri de afișare.
+function sanitizeTicker(raw){
+  return String(raw||'').toUpperCase().trim().replace(/[^A-Z0-9.]/g, '').slice(0, 20);
+}
+// Pentru valori (id/symbol/name de la CoinGecko — sursă externă, nu de încredere) interpolate
+// direct într-un atribut onclick="fn('...')": un singur ghilimele simplu SAU dublu ar rupe fie
+// stringul JS, fie atributul HTML însuși. CoinGecko nu garantează caractere sigure în numele
+// monedelor (oricine poate lista un token cu orice nume) — scoatem ghilimelele, nu doar cel simplu.
+function stripQuotes(s){
+  return String(s||'').replace(/['"]/g, '');
+}
+
+function renderPortfolioPages(){
+  const host = document.getElementById('portfolioPages');
+  // construiește un div de pagină per portofoliu, păstrând clasa "active" dacă exista deja
+  const prevActiveId = document.querySelector('#portfolioPages .page.active') ? document.querySelector('#portfolioPages .page.active').id : null;
+  host.innerHTML = store.portfolios.map(p=>`<div class="page" id="page-${p.id}"></div>`).join('');
+  if(prevActiveId && document.getElementById(prevActiveId)) document.getElementById(prevActiveId).classList.add('active');
+  store.portfolios.forEach(p=> renderTargetPortfolio(p.id));
+}
+
+// Stare de sortare per-portofoliu țintă (cheie = id-ul portofoliului), ca fiecare (Safe/Medium
+// Risk/High Risk/custom) să-și țină propria coloană/direcție de sortare, independent.
+let portfolioSortState = {};
+function setPortfolioSort(id, col){
+  const state = portfolioSortState[id] || { by:'pct', dir:'desc' };
+  if(state.by === col){ state.dir = state.dir==='asc' ? 'desc' : 'asc'; }
+  else { state.by = col; state.dir = 'desc'; }
+  portfolioSortState[id] = state;
+  renderTargetPortfolio(id);
+}
+
+function renderTargetPortfolio(id){
+  const p = store.portfolios.find(pf=>pf.id===id);
+  const host = document.getElementById('page-'+id);
+  if(!p || !host) return;
+  const sort = portfolioSortState[id] || { by:'pct', dir:'desc' };
+  const arrow = col => sort.by===col ? (sort.dir==='asc' ? ' ↑' : ' ↓') : '';
+
+  // valoare reală curentă, pentru coloana "% real" / drift față de țintă
+  // (idee luată din Delta/DeBank: alocare țintă vs. reală + sugestie de rebalansare)
+  const holdings = getRealHoldings().filter(h=>h.qty>0.0000001);
+  const totalRealValue = holdings.reduce((s,h)=> s + (getPrice(h.ticker)||0)*h.qty, 0);
+  const realByTicker = {};
+  holdings.forEach(h=>{ realByTicker[h.ticker] = (getPrice(h.ticker)||0)*h.qty; });
+
+  const enriched = p.tokens.map(t=>{
+    const price = t.t==='CASH' ? null : getPrice(t.t);
+    const realValue = t.t==='CASH' ? null : (realByTicker[t.t] || 0);
+    const realPct = (t.t!=='CASH' && totalRealValue>0) ? (realValue/totalRealValue*100) : null;
+    const delta = realPct!==null ? (realPct - t.pct) : null;
+    const deltaUsd = t.t==='CASH' ? null : (t.pct/100*totalRealValue) - realValue;
+    return { t, price, realPct, delta, deltaUsd };
+  });
+
+  const dir = sort.dir==='asc' ? 1 : -1;
+  enriched.sort((a,b)=>{
+    switch(sort.by){
+      case 'ticker': return a.t.t.localeCompare(b.t.t)*dir;
+      case 'actual': return ((a.realPct??-1)-(b.realPct??-1))*dir;
+      case 'delta': return ((a.delta??0)-(b.delta??0))*dir;
+      case 'deltaUsd': return ((a.deltaUsd??0)-(b.deltaUsd??0))*dir;
+      case 'price': return ((a.price??0)-(b.price??0))*dir;
+      case 'pct': default: return (a.t.pct-b.t.pct)*dir;
+    }
+  });
+
+  const rows = enriched.map(({t, price, realPct, delta, deltaUsd})=>{
+    let deltaCell = '<span style="color:var(--text3);">—</span>';
+    if(delta!==null){
+      const deltaColor = Math.abs(delta) < 1 ? 'var(--text3)' : (delta>0 ? 'var(--neg)' : 'var(--pos)');
+      deltaCell = `<span style="color:${deltaColor};">${delta>=0?'+':''}${delta.toFixed(1)}%</span>`;
+    }
+    let deltaUsdCell = '<span style="color:var(--text3);">—</span>';
+    if(deltaUsd!==null){
+      deltaUsdCell = deltaUsd>=0
+        ? `<span style="color:var(--pos);">+${fmtUSD(deltaUsd)} buy</span>`
+        : `<span style="color:var(--neg);">${fmtUSD(Math.abs(deltaUsd))} sell</span>`;
+    }
+    return `<tr>
+      <td><span class="tok-ticker">${t.t}</span></td>
+      <td class="num" style="cursor:pointer;" onclick="editTokenPct('${p.id}','${t.t}')" title="Click pentru a edita %">${t.pct}%</td>
+      <td class="num">${realPct!==null ? realPct.toFixed(1)+'%' : (t.t==='CASH' ? '—' : '<span style="color:var(--text3);">0%</span>')}</td>
+      <td class="num">${deltaCell}</td>
+      <td class="num">${deltaUsdCell}</td>
+      <td class="num">${price!==null ? fmtUSD(price) : (t.t==='CASH' ? '—' : '<span style="color:var(--text3);">nerezolvat</span>')}</td>
+      <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeTokenFromPortfolio('${p.id}','${t.t}')">delete</button></td>
+    </tr>`;
+  }).join('');
+
+  host.innerHTML = `
+    <div class="page-head">
+      <div>
+        <div class="page-title">${escapeHtml(p.label)}</div>
+        <div class="page-sub">${escapeHtml(p.note||'')}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-gold btn-sm" onclick="openTxModal()">+ Add transaction</button>
+        <button class="btn btn-sm" onclick="addTokenToPortfolio('${p.id}')">+ Add token</button>
+        <button class="btn btn-sm" onclick="renamePortfolio('${p.id}')">✎ Rename</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePortfolio('${p.id}')">✕ Delete portfolio</button>
+      </div>
+    </div>
+    <div class="panel">
+      ${p.tokens.length ? `<table>
+        <thead><tr>
+          <th style="cursor:pointer;" onclick="setPortfolioSort('${p.id}','ticker')">Token${arrow('ticker')}</th>
+          <th class="num" style="cursor:pointer;" onclick="setPortfolioSort('${p.id}','pct')">% target${arrow('pct')}</th>
+          <th class="num" style="cursor:pointer;" onclick="setPortfolioSort('${p.id}','actual')">% actual${arrow('actual')}</th>
+          <th class="num" style="cursor:pointer;" onclick="setPortfolioSort('${p.id}','delta')">Delta %${arrow('delta')}</th>
+          <th class="num" style="cursor:pointer;" onclick="setPortfolioSort('${p.id}','deltaUsd')">Delta (buy/sell)${arrow('deltaUsd')}</th>
+          <th class="num" style="cursor:pointer;" onclick="setPortfolioSort('${p.id}','price')">Current price${arrow('price')}</th>
+          <th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>` : `<div class="empty-state">
+        <div class="display">No tokens in this portfolio</div>
+        <div>Click "+ Add token" to start populating it.</div>
+      </div>`}
+    </div>`;
+}
+
+/* Portfolio CRUD */
+function genPortfolioId(){
+  return 'pf_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+function createPortfolio(){
+  const name = prompt('New portfolio name:');
+  if(name===null || !name.trim()) return;
+  const id = genPortfolioId();
+  store.portfolios.push({ id, label:name.trim(), note:'', tokens:[] });
+  savePortfoliosStore();
+  renderPortfolioNav();
+  renderPortfolioPages();
+  goToPage(id);
+  toast(`Portfolio created: ${name.trim()}`);
+}
+function deletePortfolio(id){
+  const p = store.portfolios.find(pf=>pf.id===id);
+  if(!p) return;
+  if(!confirm(`Delete portfolio "${p.label}"? This doesn't affect your transactions or your real portfolio — only the target allocation. This action cannot be undone.`)) return;
+  store.portfolios = store.portfolios.filter(pf=>pf.id!==id);
+  savePortfoliosStore();
+  renderPortfolioNav();
+  renderPortfolioPages();
+  goToPage('real');
+  toast(`Portfolio deleted: ${p.label}`);
+}
+function renamePortfolio(id){
+  const p = store.portfolios.find(pf=>pf.id===id);
+  if(!p) return;
+  const name = prompt('New name:', p.label);
+  if(name===null || !name.trim()) return;
+  const note = prompt('Note (optional):', p.note||'');
+  p.label = name.trim();
+  if(note!==null) p.note = note.trim();
+  savePortfoliosStore();
+  renderPortfolioNav();
+  renderTargetPortfolio(id);
+  toast('Portofoliu redenumit.');
+}
+let pendingPortfolioId = null;
+let pendingTokenTicker = null;
+let tokenSearchTimeout = null;
+
+function addTokenToPortfolio(id){
+  const p = store.portfolios.find(pf=>pf.id===id);
+  if(!p) return;
+  pendingPortfolioId = id;
+  pendingTokenTicker = null;
+  document.getElementById('atTicker').value = '';
+  document.getElementById('atPct').value = '';
+  document.getElementById('atConfirmed').textContent = '';
+  document.getElementById('atSearchResults').style.display = 'none';
+  document.getElementById('addTokenModalBg').classList.add('open');
+}
+function closeAddTokenModal(){ document.getElementById('addTokenModalBg').classList.remove('open'); }
+
+function handleTokenSearch(val){
+  clearTimeout(tokenSearchTimeout);
+  const raw = val.toUpperCase().trim();
+  document.getElementById('atConfirmed').textContent = '';
+  pendingTokenTicker = null;
+  const box = document.getElementById('atSearchResults');
+  if(!raw){ box.style.display='none'; return; }
+
+  if(store.tickerMap[raw]){
+    pendingTokenTicker = raw;
+    box.style.display='none';
+    document.getElementById('atConfirmed').textContent = `✓ ${raw} → ${store.tickerMap[raw]} (known mapping)`;
+    return;
+  }
+
+  renderTickerDropdown(box, localTickerMatches(raw), (t)=>{
+    confirmTokenTicker(t, store.tickerMap[t] || null, t, t);
+  });
+
+  tokenSearchTimeout = setTimeout(async ()=>{
+    const results = await resolveTicker(raw);
+    if(results === null || !results.length) return;
+    box.style.display='block';
+    box.innerHTML = results.map(c=>`
+      <div class="sr-item" onclick="confirmTokenTicker('${stripQuotes(raw)}','${stripQuotes(c.id)}','${stripQuotes((c.symbol||'').toUpperCase())}','${stripQuotes(c.name)}')">
+        <span>${escapeHtml(c.name||'')} <span class="badge">${escapeHtml((c.symbol||'').toUpperCase())}</span></span>
+        <span style="color:var(--text3);">${c.market_cap_rank ? '#'+c.market_cap_rank : ''}</span>
+      </div>`).join('');
+  }, 450);
+}
+
+function confirmTokenTicker(ticker, id, symbol, name){
+  ticker = sanitizeTicker(ticker);
+  if(id){ store.tickerMap[ticker] = id; saveMapStore(); }
+  pendingTokenTicker = ticker;
+  document.getElementById('atSearchResults').style.display='none';
+  document.getElementById('atConfirmed').textContent = id
+    ? `✓ ${ticker} mapat la "${name}" (${id})`
+    : `✓ ${ticker} selected (no live price yet — you can set a manual price from My portfolio)`;
+}
+
+function saveTokenToPortfolio(){
+  const raw = sanitizeTicker(document.getElementById('atTicker').value);
+  const ticker = sanitizeTicker(pendingTokenTicker) || raw;
+  const pct = parseFloat(document.getElementById('atPct').value);
+  const p = store.portfolios.find(pf=>pf.id===pendingPortfolioId);
+  if(!p) return;
+  if(!ticker || isNaN(pct) || pct<0){
+    toast('Fill in ticker and a valid percentage.', true);
+    return;
+  }
+  const existing = p.tokens.find(tok=>tok.t===ticker);
+  if(existing){ existing.pct = pct; }
+  else { p.tokens.push({ t:ticker, pct }); }
+  savePortfoliosStore();
+  closeAddTokenModal();
+  renderTargetPortfolio(pendingPortfolioId);
+  toast(`${ticker} set to ${pct}% in "${p.label}".`);
+  checkPortfolioOverAllocation(pendingPortfolioId);
+}
+// Verifică dacă suma alocărilor unui portofoliu depășește 100% și, dacă da, avertizează
+// printr-un toast — apelată după orice modificare de % (adăugare/editare token).
+function checkPortfolioOverAllocation(id){
+  const p = store.portfolios.find(pf=>pf.id===id);
+  if(!p) return;
+  const total = p.tokens.reduce((s,t)=>s+Number(t.pct||0),0);
+  if(total > 100.05){
+    toast(`"${p.label}" is now allocated at ${total.toFixed(1)}% — over 100%, check your allocation.`, true);
+  }
+}
+
+function removeTokenFromPortfolio(id, ticker){
+  const p = store.portfolios.find(pf=>pf.id===id);
+  if(!p) return;
+  if(!confirm(`Remove ${ticker} from "${p.label}"'s target allocation? This only affects the target, not My portfolio holdings.`)) return;
+  p.tokens = p.tokens.filter(t=>t.t!==ticker);
+  savePortfoliosStore();
+  renderTargetPortfolio(id);
+}
+function editTokenPct(id, ticker){
+  const p = store.portfolios.find(pf=>pf.id===id);
+  if(!p) return;
+  const tok = p.tokens.find(t=>t.t===ticker);
+  if(!tok) return;
+  const val = prompt(`% nou pentru ${ticker}:`, tok.pct);
+  if(val===null) return;
+  const pct = parseFloat(val);
+  if(isNaN(pct) || pct<0){ toast('Procent invalid.', true); return; }
+  tok.pct = pct;
+  savePortfoliosStore();
+  renderTargetPortfolio(id);
+  checkPortfolioOverAllocation(id);
+}
+
+/* =========================================================
+   FORMATTERS
+   ========================================================= */
+function fmtUSD(v){
+  if(v===null || v===undefined || isNaN(v)) return '—';
+  // format american ($1,234.56) — la fel ca pe grafice/exchange-uri, nu ro-RO
+  return v.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits: Math.abs(v)<10?4:2});
+}
+function fmtEUR(v){
+  if(v===null || v===undefined || isNaN(v)) return '—';
+  return v.toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits: Math.abs(v)<10?4:2});
+}
+function getFxRate(){
+  return store.fxRate || FALLBACK_USD_EUR_RATE;
+}
+// afișare dublă $ / € pentru cardurile de dashboard — cursul e cel mai recent calculat din
+// perechile usd/eur întoarse de CoinGecko; dacă n-a fost niciodată disponibil live, folosește
+// aproximarea fixă și marchează explicit acest lucru (nu-l prezintă ca preț curent real)
+function fmtUsdEur(v){
+  if(v===null || v===undefined || isNaN(v)) return '—';
+  const eurVal = v * getFxRate();
+  return `${fmtUSD(v)} / ${fmtEUR(eurVal)}`;
+}
+// afișare $ / € cu o valoare EUR explicită (nu convertită din USD) — folosit pt. "Total invested",
+// unde vrem suma REALĂ investită în EUR (câmpul amountEUR per tranzacție), nu o reconversie.
+function fmtUsdCustomEur(usdVal, eurVal){
+  if(usdVal===null || usdVal===undefined || isNaN(usdVal)) return '—';
+  return `${fmtUSD(usdVal)} / ${fmtEUR(eurVal)}`;
+}
+// suma reală investită în EUR — din câmpul amountEUR per tranzacție (suma pe care chiar ai
+// pus-o, ex. "100 eur"/"1000 eur" din tabelul tău), nu recalculată din preț×curs curent.
+// Pentru tranzacții fără acest câmp (adăugate manual, fără o sumă EUR explicită), aproximează
+// din qty×preț(USD)×cursul curent — semnalat separat sub cardul de dashboard dacă se întâmplă.
+function getTotalInvestedEUR(){
+  let total = 0;
+  let hadFallback = false;
+  store.tx.forEach(t=>{
+    let amt;
+    if(t.amountEUR !== undefined && t.amountEUR !== null){
+      amt = t.amountEUR;
+    } else {
+      amt = t.qty * t.price * getFxRate();
+      hadFallback = true;
+    }
+    total += (t.type==='buy') ? amt : -amt;
+  });
+  return { total, hadFallback };
+}
+function fmtPct(v){
+  if(v===null || v===undefined || isNaN(v)) return '—';
+  return (v>=0?'+':'') + v.toFixed(2) + '%';
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function renderAll(){
+  safeRun('renderReal', renderReal);
+  safeRun('renderTx', renderTx);
+  safeRun('renderPortfolioPages', renderPortfolioPages);
+  safeRun('renderWatchlist', renderWatchlist);
+  safeRun('renderConcentration', renderConcentration);
+}
+function safeRun(name, fn){
+  try{ fn(); }
+  catch(e){
+    console.error(`Eroare în ${name}:`, e);
+    toast(`Eroare la randarea "${name}" — vezi consola browser-ului pentru detalii. Restul paginii tot s-a actualizat.`, true);
+  }
+}
+
+(async function init(){
+  await loadAll();
+  renderPortfolioNav();
+  renderAll();
+  // primă încercare de fetch prețuri pentru toate monedele (holdings + watchlist), silențioasă
+  // (nu blochează UI-ul dacă eșuează) — rezolvă și tickerele nemapate încă, ca watchlist-ul să
+  // aibă preț pentru toate monedele, nu doar cele deja ținute.
+  refreshWatchlistPrices();
+  loadMarketsPage(1);
+})();
+</script>
+
+
+</body></html>
