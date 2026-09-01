@@ -1360,7 +1360,17 @@ const SEED_MAP = {
   BTC:'bitcoin', ETH:'ethereum', SOL:'solana', LINK:'chainlink', UNI:'uniswap',
   AAVE:'aave', BNB:'binancecoin', ARB:'arbitrum', SUI:'sui', TRX:'tron',
   NEAR:'near', AKT:'akash-network', ONDO:'ondo-finance', OP:'optimism',
-  HYPE:'hyperliquid', ENA:'ethena', AUKI:'auki-labs'
+  HYPE:'hyperliquid', ENA:'ethena', AUKI:'auki-labs',
+  // Restul tickerelor din VERDICTS/DEFAULT_PORTFOLIOS, verificate manual direct din
+  // CoinGecko /search (id exact confirmat, nu presupus) — adăugate ca să nu mai fie
+  // nevoie de rezolvare live pe fiecare device/browser nou (cauza rate-limit-ului 429
+  // la prima încărcare pe un device fără cache local).
+  CAKE:'pancakeswap-token', INJ:'injective-protocol', SKY:'sky', SYRUP:'syrup',
+  PENDLE:'pendle', GEOD:'geodnet', TAO:'bittensor', JTO:'jito-governance-token',
+  ZIG:'zignaly', MORPHO:'morpho', JUP:'jupiter-exchange-solana', ZRO:'layerzero',
+  SHFL:'shuffle-2', RLB:'rollbit-coin', BABY:'babylon', BTR:'bitlayer-bitvm',
+  AZUR:'azuro-protocol', LMTS:'limitless-3', CORE:'coredaoorg', ZEC:'zcash',
+  VIRTUAL:'virtual-protocol', CPOOL:'clearpool', ASTER:'aster-2', ETHFI:'ether-fi'
 };
 
 // Portofoliile țintă implicite (seed) — din 3_PORTOFOLII_CRYPTO.md (13.08.2026).
@@ -1644,7 +1654,7 @@ async function refreshAllPrices(){
 
   const result = await fetchPrices([...idsNeeded]);
   if(result === null){
-    toast('Could not reach CoinGecko from this environment (the artifact sandbox likely blocks external fetches). Download the file and open it directly in a browser for live prices.', true);
+    toast('CoinGecko nu a răspuns (probabil rate-limit pe API-ul public gratuit). Mai încearcă în câteva secunde.', true);
     return false;
   }
   Object.entries(result).forEach(([id, val])=>{
@@ -2309,7 +2319,7 @@ function renderReal(){
       <div class="card-value ${c.cls||''}">${c.value}</div>
       ${c.delta ? `<div class="card-delta ${c.cls||''}">${c.delta}</div>` : ''}
     </div>`).join('')
-    + (store.fxRateIsLive ? '' : `<div style="grid-column:1/-1;font-size:11px;color:var(--text3);margin-top:-4px;">Approximate EUR rate (${getFxRate().toFixed(2)}), not live-updated — CoinGecko source hasn't been reachable yet in this environment.</div>`);
+    + (store.fxRateIsLive ? '' : `<div style="grid-column:1/-1;font-size:11px;color:var(--text3);margin-top:-4px;">Approximate EUR rate (${getFxRate().toFixed(2)}), not live-updated — CoinGecko nu a răspuns încă (posibil rate-limit).</div>`);
 
   renderAllocChart(holdings, totalValue);
   renderEvoChart();
@@ -2493,23 +2503,33 @@ function renderWatchlist(){
 
 // Rezolvă (dacă lipsesc din tickerMap) și aduce prețuri live pentru toți tokenii din VERDICTS
 // (exceptând CASH și REJECT), ca watchlist-ul să aibă preț chiar și pentru tokeni nemapați încă.
+function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
 async function refreshWatchlistPrices(){
   const candidates = Object.entries(VERDICTS).filter(([t,v])=> t!=='CASH' && v!=='REJECT').map(([t])=>t);
   const unmapped = candidates.filter(t=>!store.tickerMap[t]);
   let resolvedAny = false;
-  for(const ticker of unmapped){
+  let anyRateLimited = false;
+  for(let i=0; i<unmapped.length; i++){
+    const ticker = unmapped[i];
     const results = await resolveTicker(ticker);
     if(results === null){
-      toast('Could not reach CoinGecko from this environment. Open the downloaded file directly in a browser for live prices.', true);
-      return;
-    }
-    if(results.length){
+      // CoinGecko a respins cererea (de regulă rate-limit 429 pe API-ul public gratuit) —
+      // sărim peste acest ticker și continuăm cu restul, nu abandonăm tot progresul deja făcut.
+      anyRateLimited = true;
+    } else if(results.length){
       const exact = results.find(c => (c.symbol||'').toUpperCase() === ticker);
       store.tickerMap[ticker] = (exact || results[0]).id;
       resolvedAny = true;
     }
+    // throttling defensiv: lăsăm puțin timp între cereri succesive ca să nu lovim din nou
+    // rate-limit-ul API-ului public gratuit (relevant doar pentru tickere viitoare, nemapate încă)
+    if(i < unmapped.length-1) await sleep(1300);
   }
   if(resolvedAny) saveMapStore();
+  if(anyRateLimited){
+    toast('CoinGecko a limitat câteva cereri (rate-limit pe API-ul public gratuit) — unele monede noi nu s-au mapat încă. Așteaptă puțin și apasă din nou pe refresh (↻).', true);
+  }
   const ok = await refreshAllPrices();
   if(ok) renderWatchlist();
 }
@@ -2575,7 +2595,7 @@ async function loadMarketsPage(page){
     document.getElementById('marketsNextBtn').disabled = coins.length < 100;
   }catch(e){
     statusEl.textContent = '';
-    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--neg);">Could not reach CoinGecko from this environment (${e.message}). Open the downloaded file directly in a browser for live market data.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--neg);">CoinGecko nu a răspuns (${e.message}), probabil rate-limit. Mai încearcă în câteva secunde.</td></tr>`;
     document.getElementById('marketsPageLabel').textContent = '';
   }
 }
@@ -2777,7 +2797,7 @@ async function runRiskAnalysis(){
       }).join('') + `</tbody></table>
       <div style="margin-top:10px;font-size:11px;color:var(--text3);">Beta >1 = amplifies BTC moves (more volatile than BTC). Based on 90 days of daily returns — a short window, treat as directional, not precise.</div>`;
   }catch(e){
-    resultEl.innerHTML = `<div style="color:var(--neg);">Could not fetch historical data (${e.message}). Could be a CoinGecko rate limit or no API access in this environment — try opening the downloaded file directly in a browser.</div>`;
+    resultEl.innerHTML = `<div style="color:var(--neg);">Nu s-au putut aduce datele istorice (${e.message}) — probabil rate-limit CoinGecko. Mai încearcă în câteva secunde.</div>`;
   }
 }
 
